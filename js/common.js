@@ -71,7 +71,7 @@ function renderFooter() {
       <div class="footer-col">
         <h5>Liên hệ</h5>
         <p><i class="fa-solid fa-location-dot"></i>&nbsp; Xã Đam Rông 1, tỉnh Lâm Đồng</p>
-        <p><i class="fa-solid fa-phone"></i>&nbsp; 0365 008 008</p>
+        <p><i class="fa-solid fa-phone"></i>&nbsp; 0000000000</p>
         <p><i class="fa-solid fa-envelope"></i>&nbsp; hdnddamrong1@lamdong.gov.vn</p>
       </div>
       <div class="footer-col">
