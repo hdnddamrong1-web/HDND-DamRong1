@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tin tức & Hoạt động - HĐND Xã Đam Rông 1</title>
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+
+<section class="page-hero">
+  <h1><i class="fa-solid fa-newspaper"></i> Tin tức & Hoạt động</h1>
+  <p>Cập nhật các tin tức, hoạt động của HĐND xã Đam Rông 1</p>
+  <div class="breadcrumb"><a href="index.html">Trang chủ</a> / Tin tức</div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="filter-bar">
+      <input type="text" class="form-control" id="filter-keyword" placeholder="Tìm theo tiêu đề...">
+      <select class="form-control" id="filter-loai">
+        <option value="">Tất cả</option>
+        <option>Tin tức</option>
+        <option>Hoạt động HĐND</option>
+        <option>Thông báo</option>
+      </select>
+    </div>
+    <div class="news-grid" id="news-list">
+      <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/tin-tuc.js"></script>
+</body>
+</html>

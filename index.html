@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HĐND Xã Đam Rông 1 - Cổng thông tin và tương tác cử tri</title>
+<meta name="description" content="Cổng thông tin và tương tác cử tri của Hội đồng Nhân dân xã Đam Rông 1 - Lắng nghe, Kết nối, Đồng hành.">
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+
+<!-- HERO -->
+<section class="hero">
+  <img src="images/hero-banner.png" alt="Hội đồng Nhân dân xã Đam Rông 1 - Lắng nghe - Kết nối - Đồng hành - Cổng thông tin và tương tác cử tri" class="hero-banner-img">
+
+  <!-- Hero Action Cards: 4 nút cốt lõi, 2 hàng -->
+  <div class="action-grid">
+    <a href="gui-kien-nghi.html" class="action-card card-red">
+      <span class="icon-circle"><i class="fa-solid fa-pen-to-square"></i></span>
+      <span class="txt">
+        <h3>Gửi kiến nghị</h3>
+        <p>Gửi ý kiến, kiến nghị đến HĐND xã</p>
+      </span>
+      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+    </a>
+    <a href="tra-cuu.html" class="action-card card-green">
+      <span class="icon-circle"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <span class="txt">
+        <h3>Tra cứu kiến nghị</h3>
+        <p>Theo dõi tiến độ xử lý bằng mã tra cứu</p>
+      </span>
+      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+    </a>
+    <a href="van-ban.html" class="action-card card-orange">
+      <span class="icon-circle"><i class="fa-solid fa-file-lines"></i></span>
+      <span class="txt">
+        <h3>Tra cứu văn bản</h3>
+        <p>Nghị quyết, báo cáo, kế hoạch, chỉ đạo</p>
+      </span>
+      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+    </a>
+    <a href="hoat-dong.html" class="action-card card-blue">
+      <span class="icon-circle"><i class="fa-solid fa-calendar-days"></i></span>
+      <span class="txt">
+        <h3>Lịch hoạt động / Tin tức</h3>
+        <p>Lịch kỳ họp, giám sát, tiếp xúc cử tri</p>
+      </span>
+      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+    </a>
+  </div>
+</section>
+
+<!-- SLIDER HOẠT ĐỘNG -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title"><i class="fa-solid fa-images"></i> Hoạt động nổi bật của địa phương</h2>
+    <div class="slider-wrap" id="home-slider">
+      <div class="slider-track" id="slider-track">
+        <!-- slides được render bằng JS -->
+      </div>
+      <button class="slider-btn prev" id="slider-prev" aria-label="Trước"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="slider-btn next" id="slider-next" aria-label="Tiếp"><i class="fa-solid fa-chevron-right"></i></button>
+      <div class="slider-dots" id="slider-dots"></div>
+    </div>
+  </div>
+</section>
+
+<!-- VĂN BẢN MỚI & CỬ TRI HỎI - HĐND TRẢ LỜI -->
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-head">
+          <i class="fa-solid fa-file-lines"></i>
+          <h3>VĂN BẢN MỚI</h3>
+          <a href="van-ban.html" class="see-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="panel-body" id="home-docs-list">
+          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <i class="fa-solid fa-comments"></i>
+          <h3>CỬ TRI HỎI – HĐND TRẢ LỜI</h3>
+          <a href="tra-cuu.html" class="see-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="panel-body" id="home-qa-list">
+          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QR THEO THÔN -->
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <h2 class="section-title"><i class="fa-solid fa-qrcode"></i> Mã QR theo thôn</h2>
+    <div class="qr-banner">
+      <div class="qr-icon"><i class="fa-solid fa-qrcode"></i></div>
+      <div class="txt">
+        <h4>Danh sách mã QR các thôn</h4>
+        <p>Tham gia gửi kiến nghị nhanh chóng, thuận tiện ngay tại thôn của bạn.</p>
+      </div>
+      <a href="qr-thon.html" class="btn-primary-red">Xem danh sách QR <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/index-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+let allNews = [];
+
+function renderNewsList(list) {
+  const mount = document.getElementById('news-list');
+  if (list.length === 0) {
+    mount.innerHTML = `<div class="empty-state"><i class="fa-solid fa-newspaper"></i>Không có bài viết nào</div>`;
+    return;
+  }
+  mount.innerHTML = list
+    .map(
+      (n) => `
+    <article class="news-card">
+      <img src="${escapeHtml(n.hinh_anh || 'images/slide-kyhop-1.jpg')}" alt="${escapeHtml(n.tieu_de)}" loading="lazy">
+      <div class="nc-body">
+        <span class="tag-pill">${escapeHtml(n.loai || 'Tin tức')}</span>
+        <h4 style="margin-top:8px;">${escapeHtml(n.tieu_de)}</h4>
+        <p class="desc">${escapeHtml((n.mo_ta || '').toString().slice(0, 120))}...</p>
+        <span style="font-size:12px;color:#8a7355;"><i class="fa-solid fa-calendar"></i> ${formatDate(n.ngay)}</span>
+      </div>
+    </article>`
+    )
+    .join('');
+}
+
+function applyNewsFilters() {
+  const kw = document.getElementById('filter-keyword').value.trim().toLowerCase();
+  const loai = document.getElementById('filter-loai').value;
+  let filtered = allNews;
+  if (kw) filtered = filtered.filter((n) => (n.tieu_de || '').toLowerCase().includes(kw));
+  if (loai) filtered = filtered.filter((n) => n.loai === loai);
+  renderNewsList(filtered);
+}
+
+async function loadNews() {
+  try {
+    allNews = await fetchAll('tin_tuc', { sort: '-ngay' });
+    renderNewsList(allNews);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('news-list').innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Không thể tải tin tức</div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadNews();
+  document.getElementById('filter-keyword').addEventListener('input', applyNewsFilters);
+  document.getElementById('filter-loai').addEventListener('change', applyNewsFilters);
+});

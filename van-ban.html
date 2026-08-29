@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tra cứu văn bản - HĐND Xã Đam Rông 1</title>
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+
+<section class="page-hero">
+  <h1><i class="fa-solid fa-file-lines"></i> Tra cứu văn bản</h1>
+  <p>Nghị quyết, báo cáo, kế hoạch, văn bản chỉ đạo của HĐND xã</p>
+  <div class="breadcrumb"><a href="index.html">Trang chủ</a> / Tra cứu văn bản</div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="filter-bar">
+      <input type="text" class="form-control" id="filter-keyword" placeholder="Tìm theo tiêu đề, số hiệu...">
+      <select class="form-control" id="filter-loai">
+        <option value="">Tất cả loại văn bản</option>
+        <option>Nghị quyết</option>
+        <option>Báo cáo</option>
+        <option>Kế hoạch</option>
+        <option>Văn bản chỉ đạo</option>
+        <option>Thông báo</option>
+      </select>
+      <button class="btn btn-outline" id="filter-reset"><i class="fa-solid fa-rotate"></i> Đặt lại</button>
+    </div>
+
+    <div id="doc-list">
+      <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải văn bản...</div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/van-ban.js"></script>
+</body>
+</html>

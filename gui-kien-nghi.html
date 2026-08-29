@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gửi kiến nghị - HĐND Xã Đam Rông 1</title>
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+
+<section class="page-hero">
+  <h1><i class="fa-solid fa-pen-to-square"></i> Gửi kiến nghị đến HĐND xã</h1>
+  <p>Ý kiến của bạn sẽ được Thường trực HĐND xã tiếp nhận và xử lý</p>
+  <div class="breadcrumb"><a href="index.html">Trang chủ</a> / Gửi kiến nghị</div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="form-card">
+      <div class="alert alert-error" id="form-error"></div>
+
+      <form id="kien-nghi-form">
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Họ và tên <span class="req">*</span></label>
+            <input type="text" class="form-control" id="f-hoten" required placeholder="Nguyễn Văn A">
+          </div>
+          <div class="form-group">
+            <label>Số điện thoại (không bắt buộc)</label>
+            <input type="tel" class="form-control" id="f-sdt" placeholder="0263xxxxxx">
+          </div>
+        </div>
+
+        <div class="form-row2">
+          <div class="form-group">
+            <label>Email (không bắt buộc)</label>
+            <input type="email" class="form-control" id="f-email" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>Chọn thôn <span class="req">*</span></label>
+            <select class="form-control" id="f-thon" required>
+              <option value="">-- Chọn thôn --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Lĩnh vực kiến nghị <span class="req">*</span></label>
+          <select class="form-control" id="f-linhvuc" required>
+            <option value="">-- Chọn lĩnh vực --</option>
+            <option>Hạ tầng - Giao thông</option>
+            <option>Đất đai - Xây dựng</option>
+            <option>Nông nghiệp - Nông thôn</option>
+            <option>Giáo dục - Y tế</option>
+            <option>An ninh - Trật tự</option>
+            <option>Môi trường</option>
+            <option>Chính sách - An sinh xã hội</option>
+            <option>Khác</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Tiêu đề kiến nghị <span class="req">*</span></label>
+          <input type="text" class="form-control" id="f-tieude" required placeholder="Tóm tắt ngắn gọn nội dung kiến nghị">
+        </div>
+
+        <div class="form-group">
+          <label>Nội dung chi tiết <span class="req">*</span></label>
+          <textarea class="form-control" id="f-noidung" required placeholder="Mô tả chi tiết vấn đề, kiến nghị của bạn..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Đính kèm tệp (ảnh, video, tài liệu... không bắt buộc)</label>
+          <input type="file" class="form-control" id="f-file" accept="image/*,video/*,.pdf,.doc,.docx">
+          <p class="helper-text">
+            Ảnh sẽ được lưu kèm kiến nghị. Do đây là website tĩnh nên chỉ hỗ trợ đính kèm <b>ảnh</b> (dung lượng nhỏ, dưới ~1MB) hoặc dán <b>đường dẫn</b> (Google Drive, YouTube...) cho video/tài liệu lớn.
+          </p>
+          <input type="text" class="form-control" id="f-link" placeholder="Hoặc dán đường dẫn tài liệu/video (Google Drive, YouTube...)" style="margin-top:8px;">
+          <div id="file-preview" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
+            <input type="checkbox" id="f-congkhai" style="width:auto;">
+            Cho phép hiển thị công khai câu hỏi/kiến nghị này (ẩn danh) ở mục "Cử tri hỏi – HĐND trả lời"
+          </label>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submit-btn">
+          <i class="fa-solid fa-paper-plane"></i> Gửi kiến nghị
+        </button>
+        <p class="helper-text" style="text-align:center;margin-top:10px;">
+          Sau khi gửi, hệ thống sẽ cấp cho bạn một <b>Mã tra cứu</b> duy nhất để theo dõi tiến độ xử lý.
+        </p>
+      </form>
+
+      <div class="result-code-box" id="result-box" style="display:none;">
+        <i class="fa-solid fa-circle-check" style="font-size:32px;color:#166a3a;"></i>
+        <p style="margin-top:10px;">Kiến nghị của bạn đã được gửi thành công! Mã tra cứu của bạn là:</p>
+        <div class="code" id="result-code">DR1-2026-000000</div>
+        <p>Vui lòng lưu lại mã này để tra cứu tiến độ xử lý.</p>
+        <button class="copy-btn" id="copy-code-btn"><i class="fa-solid fa-copy"></i> Sao chép mã</button>
+        <div style="margin-top:14px;">
+          <a href="tra-cuu.html" class="btn btn-outline"><i class="fa-solid fa-magnifying-glass"></i> Đi tới trang tra cứu</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/gui-kien-nghi.js"></script>
+</body>
+</html>

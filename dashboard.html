@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard quản trị - HĐND Xã Đam Rông 1</title>
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <div class="as-brand">
+      <strong>HĐND Xã Đam Rông 1</strong>
+      <span>Khu vực quản trị</span>
+    </div>
+    <nav class="admin-nav" id="admin-nav">
+      <a href="#tong-quan" data-tab="tong-quan" class="active"><i class="fa-solid fa-gauge"></i> Tổng quan</a>
+      <a href="#kien-nghi" data-tab="kien-nghi"><i class="fa-solid fa-comments"></i> Kiến nghị cử tri</a>
+      <a href="#van-ban" data-tab="van-ban"><i class="fa-solid fa-file-lines"></i> Văn bản</a>
+      <a href="#tin-tuc" data-tab="tin-tuc"><i class="fa-solid fa-newspaper"></i> Tin tức / Hoạt động</a>
+      <a href="#lich" data-tab="lich"><i class="fa-solid fa-calendar-days"></i> Lịch hoạt động</a>
+      <a href="index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="hamburger-admin" id="hamburger-admin"><i class="fa-solid fa-bars"></i></button>
+        <h1 id="page-title">Tổng quan</h1>
+      </div>
+      <div class="admin-chip" style="color:#2a1a10;">
+        <span class="name" id="admin-name" style="color:var(--red-800);"></span>
+        <span class="badge" id="admin-role"></span>
+        <button class="btn-logout" style="border-color:var(--red-700);color:var(--red-700);" id="btn-logout-admin">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB: TỔNG QUAN -->
+    <section class="tab-panel" id="tab-tong-quan">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num" id="stat-kn-total">0</div><div class="lbl">Tổng kiến nghị</div></div>
+        <div class="stat-card"><div class="num" id="stat-kn-pending">0</div><div class="lbl">Chưa giải quyết</div></div>
+        <div class="stat-card"><div class="num" id="stat-vb-total">0</div><div class="lbl">Văn bản đã đăng</div></div>
+        <div class="stat-card"><div class="num" id="stat-tt-total">0</div><div class="lbl">Tin tức / Hoạt động</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head"><i class="fa-solid fa-chart-pie"></i><h3>Kiến nghị theo trạng thái</h3></div>
+          <div class="panel-body" style="padding:20px;">
+            <canvas id="chart-status" height="220"></canvas>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><i class="fa-solid fa-chart-simple"></i><h3>Kiến nghị theo lĩnh vực</h3></div>
+          <div class="panel-body" style="padding:20px;">
+            <canvas id="chart-linhvuc" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: KIẾN NGHỊ -->
+    <section class="tab-panel" id="tab-kien-nghi" style="display:none;">
+      <div class="filter-bar">
+        <input type="text" class="form-control" id="kn-filter-keyword" placeholder="Tìm theo tên, tiêu đề, mã tra cứu...">
+        <select class="form-control" id="kn-filter-status">
+          <option value="">Tất cả trạng thái</option>
+          <option>Đã tiếp nhận</option>
+          <option>Đang xử lý</option>
+          <option>Đã giải quyết</option>
+        </select>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Mã tra cứu</th><th>Họ tên</th><th>Thôn</th><th>Lĩnh vực</th><th>Tiêu đề</th><th>Trạng thái</th><th>Ngày gửi</th><th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="kn-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB: VĂN BẢN -->
+    <section class="tab-panel" id="tab-van-ban" style="display:none;">
+      <div class="admin-topbar" style="margin-bottom:14px;">
+        <div></div>
+        <button class="btn-primary-red" id="btn-add-vb"><i class="fa-solid fa-plus"></i> Thêm văn bản</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tiêu đề</th><th>Số hiệu</th><th>Loại</th><th>Ngày ban hành</th><th>Hành động</th></tr></thead>
+          <tbody id="vb-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB: TIN TỨC -->
+    <section class="tab-panel" id="tab-tin-tuc" style="display:none;">
+      <div class="admin-topbar" style="margin-bottom:14px;">
+        <div></div>
+        <button class="btn-primary-red" id="btn-add-tt"><i class="fa-solid fa-plus"></i> Thêm bài viết</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tiêu đề</th><th>Loại</th><th>Ngày đăng</th><th>Nổi bật</th><th>Hành động</th></tr></thead>
+          <tbody id="tt-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB: LỊCH HOẠT ĐỘNG -->
+    <section class="tab-panel" id="tab-lich" style="display:none;">
+      <div class="admin-topbar" style="margin-bottom:14px;">
+        <div></div>
+        <button class="btn-primary-red" id="btn-add-lhd"><i class="fa-solid fa-plus"></i> Thêm hoạt động</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tiêu đề</th><th>Loại</th><th>Ngày</th><th>Địa điểm</th><th>Hành động</th></tr></thead>
+          <tbody id="lhd-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL: Xem/Trả lời kiến nghị -->
+<div class="modal-overlay" id="modal-kn">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-kn-close">&times;</button>
+    <h3><i class="fa-solid fa-comments"></i> Chi tiết kiến nghị</h3>
+    <div id="modal-kn-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: Thêm/Sửa văn bản -->
+<div class="modal-overlay" id="modal-vb">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-vb-close">&times;</button>
+    <h3 id="modal-vb-title"><i class="fa-solid fa-file-lines"></i> Thêm văn bản</h3>
+    <form id="form-vb">
+      <input type="hidden" id="vb-id">
+      <div class="form-group"><label>Tiêu đề *</label><input type="text" class="form-control" id="vb-tieude" required></div>
+      <div class="form-row2">
+        <div class="form-group"><label>Số hiệu</label><input type="text" class="form-control" id="vb-sohieu"></div>
+        <div class="form-group"><label>Loại *</label>
+          <select class="form-control" id="vb-loai" required>
+            <option>Nghị quyết</option><option>Báo cáo</option><option>Kế hoạch</option><option>Văn bản chỉ đạo</option><option>Thông báo</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Ngày ban hành *</label><input type="date" class="form-control" id="vb-ngay" required></div>
+      <div class="form-group"><label>Mô tả / trích yếu</label><textarea class="form-control" id="vb-mota"></textarea></div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu văn bản</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Thêm/Sửa tin tức -->
+<div class="modal-overlay" id="modal-tt">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-tt-close">&times;</button>
+    <h3 id="modal-tt-title"><i class="fa-solid fa-newspaper"></i> Thêm bài viết</h3>
+    <form id="form-tt">
+      <input type="hidden" id="tt-id">
+      <div class="form-group"><label>Tiêu đề *</label><input type="text" class="form-control" id="tt-tieude" required></div>
+      <div class="form-row2">
+        <div class="form-group"><label>Loại *</label>
+          <select class="form-control" id="tt-loai" required><option>Tin tức</option><option>Hoạt động HĐND</option><option>Thông báo</option></select>
+        </div>
+        <div class="form-group"><label>Ngày đăng *</label><input type="date" class="form-control" id="tt-ngay" required></div>
+      </div>
+      <div class="form-group">
+        <label>Hình ảnh minh họa</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="form-control" id="tt-hinhanh" placeholder="Dán URL ảnh (images/... hoặc https://...)" style="flex:1;min-width:180px;">
+          <button type="button" class="btn btn-outline" id="tt-upload-btn"><i class="fa-solid fa-upload"></i> Tải ảnh lên</button>
+          <input type="file" id="tt-file-input" accept="image/*" style="display:none;">
+        </div>
+        <p class="helper-text">Có thể dán URL ảnh có sẵn, hoặc bấm "Tải ảnh lên" để chọn ảnh từ máy (ảnh nên nhỏ hơn ~1MB).</p>
+        <div id="tt-image-preview" style="margin-top:8px;"></div>
+      </div>
+      <div class="form-group"><label>Mô tả ngắn</label><textarea class="form-control" id="tt-mota"></textarea></div>
+      <div class="form-group"><label>Nội dung đầy đủ</label><textarea class="form-control" id="tt-noidung"></textarea></div>
+      <div class="form-group"><label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="tt-noibat" style="width:auto;"> Hiển thị ở slider trang chủ (nổi bật)</label></div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu bài viết</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Thêm/Sửa lịch hoạt động -->
+<div class="modal-overlay" id="modal-lhd">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-lhd-close">&times;</button>
+    <h3 id="modal-lhd-title"><i class="fa-solid fa-calendar-days"></i> Thêm hoạt động</h3>
+    <form id="form-lhd">
+      <input type="hidden" id="lhd-id">
+      <div class="form-group"><label>Tiêu đề *</label><input type="text" class="form-control" id="lhd-tieude" required></div>
+      <div class="form-row2">
+        <div class="form-group"><label>Loại *</label>
+          <select class="form-control" id="lhd-loai" required><option>Kỳ họp</option><option>Giám sát</option><option>Tiếp xúc cử tri</option><option>Khác</option></select>
+        </div>
+        <div class="form-group"><label>Ngày *</label><input type="date" class="form-control" id="lhd-ngay" required></div>
+      </div>
+      <div class="form-group"><label>Địa điểm</label><input type="text" class="form-control" id="lhd-diadiem"></div>
+      <div class="form-group"><label>Nội dung chi tiết</label><textarea class="form-control" id="lhd-noidung"></textarea></div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu hoạt động</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

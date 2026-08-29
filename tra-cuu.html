@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tra cứu kiến nghị - HĐND Xã Đam Rông 1</title>
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+
+<section class="page-hero">
+  <h1><i class="fa-solid fa-magnifying-glass"></i> Tra cứu tiến độ kiến nghị</h1>
+  <p>Nhập mã tra cứu đã được cấp khi gửi kiến nghị để xem trạng thái xử lý</p>
+  <div class="breadcrumb"><a href="index.html">Trang chủ</a> / Tra cứu kiến nghị</div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="form-card" style="max-width:640px;">
+      <div class="form-group">
+        <label>Mã tra cứu</label>
+        <div style="display:flex;gap:10px;">
+          <input type="text" class="form-control" id="search-code" placeholder="Ví dụ: DR1-2026-000001" style="text-transform:uppercase;">
+          <button class="btn-submit" style="width:auto;padding:11px 22px;white-space:nowrap;" id="search-btn">
+            <i class="fa-solid fa-magnifying-glass"></i> Tra cứu
+          </button>
+        </div>
+        <p class="helper-text">Mã tra cứu được hệ thống gửi cho bạn ngay sau khi gửi kiến nghị thành công.</p>
+      </div>
+      <div class="alert alert-error" id="search-error"></div>
+    </div>
+
+    <div id="result-area" style="max-width:760px;margin:24px auto 0;"></div>
+  </div>
+</section>
+
+<!-- CỬ TRI HỎI - HĐND TRẢ LỜI công khai -->
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <h2 class="section-title"><i class="fa-solid fa-comments"></i> Cử tri hỏi – HĐND trả lời</h2>
+    <p class="section-sub">Các kiến nghị đã được cử tri đồng ý công khai (ẩn danh)</p>
+    <div id="public-qa-list" class="two-col" style="display:grid;grid-template-columns:1fr;gap:14px;">
+      <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/tra-cuu.js"></script>
+</body>
+</html>
