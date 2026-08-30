@@ -27,6 +27,11 @@ function renderDocList(docs) {
           <span><i class="fa-solid fa-calendar"></i> ${formatDate(d.ngay_ban_hanh)}</span>
         </div>
         <p class="desc">${escapeHtml(d.mo_ta || '')}</p>
+        ${
+          d.file_url
+            ? `<a href="${escapeHtml(d.file_url)}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:10px;display:inline-flex;"><i class="fa-solid fa-file-arrow-down"></i> Xem / Tải văn bản</a>`
+            : ''
+        }
       </div>
     </div>`
     )
