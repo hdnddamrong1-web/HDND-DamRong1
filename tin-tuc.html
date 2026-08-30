@@ -37,6 +37,17 @@
 
 <footer id="site-footer"></footer>
 
+<!-- MODAL: Chi tiết tin tức -->
+<div class="modal-overlay" id="modal-news-detail">
+  <div class="modal-box" style="max-width:720px;">
+    <button class="modal-close" id="modal-news-detail-close">&times;</button>
+    <img id="news-detail-img" src="" alt="" style="width:100%;max-height:320px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
+    <div id="news-detail-meta" style="margin-bottom:10px;"></div>
+    <h3 id="news-detail-title" style="color:var(--red-800);font-weight:800;margin:0 0 14px;"></h3>
+    <div id="news-detail-body" style="font-size:14.5px;line-height:1.7;color:#3a2c1c;"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/auth.js"></script>
