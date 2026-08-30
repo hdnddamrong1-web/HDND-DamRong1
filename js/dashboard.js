@@ -21,6 +21,7 @@ async function bootDashboard() {
   document.getElementById('btn-add-tt').addEventListener('click', () => openTtModal(null));
   document.getElementById('form-tt').addEventListener('submit', submitTtForm);
   initTtImageUpload();
+  initTtGalleryUpload();
 
   document.getElementById('btn-add-lhd').addEventListener('click', () => openLhdModal(null));
   document.getElementById('form-lhd').addEventListener('submit', submitLhdForm);
@@ -416,11 +417,67 @@ function renderTtImagePreview(url) {
     : '';
 }
 
+let cachedTtGallery = [];
+
+function renderTtGalleryPreview() {
+  const preview = document.getElementById('tt-gallery-preview');
+  if (!preview) return;
+  preview.innerHTML = cachedTtGallery
+    .map(
+      (url, idx) => `
+    <div style="position:relative;">
+      <img src="${url}" alt="Ảnh phụ" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #e4d4b0;">
+      <button type="button" onclick="removeTtGalleryImage(${idx})" style="position:absolute;top:-8px;right:-8px;background:#b3261e;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:700;">&times;</button>
+    </div>`
+    )
+    .join('');
+}
+
+function removeTtGalleryImage(idx) {
+  cachedTtGallery.splice(idx, 1);
+  renderTtGalleryPreview();
+}
+
+function initTtGalleryUpload() {
+  const uploadBtn = document.getElementById('tt-gallery-upload-btn');
+  const fileInput = document.getElementById('tt-gallery-input');
+  if (!uploadBtn || !fileInput) return;
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', async () => {
+    const files = Array.from(fileInput.files || []);
+    if (files.length === 0) return;
+    const originalHtml = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`Ảnh "${file.name}" quá lớn (giới hạn 5MB), đã bỏ qua.`);
+        continue;
+      }
+      uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ${file.name}...`;
+      try {
+        const url = await uploadToStorage(file, 'tin-tuc');
+        cachedTtGallery.push(url);
+        renderTtGalleryPreview();
+      } catch (e) {
+        console.error(e);
+        alert(`Có lỗi khi tải ảnh "${file.name}" lên.`);
+      }
+    }
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = originalHtml;
+    fileInput.value = '';
+  });
+}
+
 function openTtModal(id) {
   document.getElementById('form-tt').reset();
   document.getElementById('modal-tt-title').innerHTML = id ? '<i class="fa-solid fa-newspaper"></i> Sửa bài viết' : '<i class="fa-solid fa-newspaper"></i> Thêm bài viết';
   document.getElementById('tt-id').value = id || '';
   renderTtImagePreview('');
+  cachedTtGallery = [];
   if (id) {
     const t = cachedTinTuc.find((x) => x.id === id);
     if (t) {
@@ -432,8 +489,10 @@ function openTtModal(id) {
       document.getElementById('tt-noidung').value = t.noi_dung || '';
       document.getElementById('tt-noibat').checked = !!t.noi_bat;
       renderTtImagePreview(t.hinh_anh || '');
+      cachedTtGallery = Array.isArray(t.hinh_anh_phu) ? [...t.hinh_anh_phu] : [];
     }
   }
+  renderTtGalleryPreview();
   document.getElementById('modal-tt').classList.add('open');
 }
 
@@ -488,7 +547,8 @@ async function submitTtForm(e) {
     hinh_anh: document.getElementById('tt-hinhanh').value.trim(),
     mo_ta: document.getElementById('tt-mota').value.trim(),
     noi_dung: document.getElementById('tt-noidung').value.trim(),
-    noi_bat: document.getElementById('tt-noibat').checked
+    noi_bat: document.getElementById('tt-noibat').checked,
+    hinh_anh_phu: cachedTtGallery
   };
   try {
     if (id) {
