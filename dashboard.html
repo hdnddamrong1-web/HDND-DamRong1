@@ -161,6 +161,16 @@
       </div>
       <div class="form-group"><label>Ngày ban hành *</label><input type="date" class="form-control" id="vb-ngay" required></div>
       <div class="form-group"><label>Mô tả / trích yếu</label><textarea class="form-control" id="vb-mota"></textarea></div>
+      <div class="form-group">
+        <label>File văn bản (PDF, Word...)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="form-control" id="vb-file" placeholder="Dán URL file (PDF...) hoặc bấm Tải lên" style="flex:1;min-width:180px;">
+          <button type="button" class="btn btn-outline" id="vb-upload-btn"><i class="fa-solid fa-upload"></i> Tải file lên</button>
+          <input type="file" id="vb-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf" style="display:none;">
+        </div>
+        <p class="helper-text">Có thể dán URL file có sẵn, hoặc bấm "Tải file lên" để chọn tệp PDF/Word/Excel từ máy (giới hạn ~10MB).</p>
+        <div id="vb-file-preview" style="margin-top:8px;"></div>
+      </div>
       <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu văn bản</button>
     </form>
   </div>
