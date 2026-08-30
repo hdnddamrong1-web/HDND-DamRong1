@@ -35,6 +35,20 @@ function openNewsDetail(id) {
   document.getElementById('news-detail-img').alt = n.tieu_de || '';
   const noidung = (n.noi_dung || n.mo_ta || 'Chưa có nội dung chi tiết.').toString();
   document.getElementById('news-detail-body').innerHTML = escapeHtml(noidung).replace(/\n/g, '<br>');
+
+  const gallery = document.getElementById('news-detail-gallery');
+  const galleryImgs = Array.isArray(n.hinh_anh_phu) ? n.hinh_anh_phu : [];
+  if (gallery) {
+    gallery.innerHTML = galleryImgs.length
+      ? `<h4 style="margin:16px 0 8px;font-size:14px;color:#8a7355;">Hình ảnh khác</h4>
+         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+           ${galleryImgs
+             .map((url) => `<img src="${escapeHtml(url)}" alt="Ảnh hoạt động" style="width:100%;height:110px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${escapeHtml(url)}','_blank')">`)
+             .join('')}
+         </div>`
+      : '';
+  }
+
   document.getElementById('modal-news-detail').classList.add('open');
 }
 
