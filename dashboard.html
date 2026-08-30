@@ -200,6 +200,15 @@
         <p class="helper-text">Có thể dán URL ảnh có sẵn, hoặc bấm "Tải ảnh lên" để chọn ảnh từ máy (ảnh nên nhỏ hơn ~1MB).</p>
         <div id="tt-image-preview" style="margin-top:8px;"></div>
       </div>
+      <div class="form-group">
+        <label>Ảnh phụ (có thể chọn nhiều ảnh)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline" id="tt-gallery-upload-btn"><i class="fa-solid fa-images"></i> Thêm ảnh phụ</button>
+          <input type="file" id="tt-gallery-input" accept="image/*" multiple style="display:none;">
+        </div>
+        <p class="helper-text">Ảnh phụ chỉ hiển thị khi người dân bấm xem chi tiết bài viết (không hiện ở slider trang chủ). Có thể chọn nhiều ảnh cùng lúc, mỗi ảnh tối đa ~5MB.</p>
+        <div id="tt-gallery-preview" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
       <div class="form-group"><label>Mô tả ngắn</label><textarea class="form-control" id="tt-mota"></textarea></div>
       <div class="form-group"><label>Nội dung đầy đủ</label><textarea class="form-control" id="tt-noidung"></textarea></div>
       <div class="form-group"><label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="tt-noibat" style="width:auto;"> Hiển thị ở slider trang chủ (nổi bật)</label></div>
