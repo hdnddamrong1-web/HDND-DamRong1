@@ -16,6 +16,7 @@ async function bootDashboard() {
 
   document.getElementById('btn-add-vb').addEventListener('click', () => openVbModal(null));
   document.getElementById('form-vb').addEventListener('submit', submitVbForm);
+  initVbFileUpload();
 
   document.getElementById('btn-add-tt').addEventListener('click', () => openTtModal(null));
   document.getElementById('form-tt').addEventListener('submit', submitTtForm);
@@ -286,10 +287,19 @@ async function loadVanBanTable() {
   }
 }
 
+function renderVbFilePreview(url) {
+  const preview = document.getElementById('vb-file-preview');
+  if (!preview) return;
+  preview.innerHTML = url
+    ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--red-700);font-weight:700;"><i class="fa-solid fa-file-arrow-down"></i> Xem file đã tải</a>`
+    : '';
+}
+
 function openVbModal(id) {
   document.getElementById('form-vb').reset();
   document.getElementById('modal-vb-title').innerHTML = id ? '<i class="fa-solid fa-file-lines"></i> Sửa văn bản' : '<i class="fa-solid fa-file-lines"></i> Thêm văn bản';
   document.getElementById('vb-id').value = id || '';
+  renderVbFilePreview('');
   if (id) {
     const d = cachedVanBan.find((x) => x.id === id);
     if (d) {
@@ -298,9 +308,47 @@ function openVbModal(id) {
       document.getElementById('vb-loai').value = d.loai || 'Nghị quyết';
       document.getElementById('vb-ngay').value = d.ngay_ban_hanh ? new Date(d.ngay_ban_hanh).toISOString().slice(0, 10) : '';
       document.getElementById('vb-mota').value = d.mo_ta || '';
+      document.getElementById('vb-file').value = d.file_url || '';
+      renderVbFilePreview(d.file_url || '');
     }
   }
   document.getElementById('modal-vb').classList.add('open');
+}
+
+function initVbFileUpload() {
+  const uploadBtn = document.getElementById('vb-upload-btn');
+  const fileInput = document.getElementById('vb-file-input');
+  const urlInput = document.getElementById('vb-file');
+  if (!uploadBtn || !fileInput) return;
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File quá lớn (giới hạn 10MB). Vui lòng chọn file nhỏ hơn hoặc dán URL file có sẵn.');
+      fileInput.value = '';
+      return;
+    }
+    const originalHtml = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+    try {
+      const url = await uploadToStorage(file, 'van-ban');
+      urlInput.value = url;
+      renderVbFilePreview(url);
+    } catch (e) {
+      console.error(e);
+      alert('Có lỗi khi tải file lên.');
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalHtml;
+      fileInput.value = '';
+    }
+  });
+
+  urlInput.addEventListener('input', () => renderVbFilePreview(urlInput.value.trim()));
 }
 
 async function submitVbForm(e) {
@@ -311,7 +359,8 @@ async function submitVbForm(e) {
     so_hieu: document.getElementById('vb-sohieu').value.trim(),
     loai: document.getElementById('vb-loai').value,
     ngay_ban_hanh: new Date(document.getElementById('vb-ngay').value).toISOString(),
-    mo_ta: document.getElementById('vb-mota').value.trim()
+    mo_ta: document.getElementById('vb-mota').value.trim(),
+    file_url: document.getElementById('vb-file').value.trim()
   };
   try {
     if (id) {
