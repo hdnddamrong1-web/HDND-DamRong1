@@ -9,17 +9,33 @@ function renderNewsList(list) {
   mount.innerHTML = list
     .map(
       (n) => `
-    <article class="news-card">
+    <article class="news-card" onclick="openNewsDetail('${n.id}')" style="cursor:pointer;">
       <img src="${escapeHtml(n.hinh_anh || 'images/slide-kyhop-1.jpg')}" alt="${escapeHtml(n.tieu_de)}" loading="lazy">
       <div class="nc-body">
         <span class="tag-pill">${escapeHtml(n.loai || 'Tin tức')}</span>
         <h4 style="margin-top:8px;">${escapeHtml(n.tieu_de)}</h4>
         <p class="desc">${escapeHtml((n.mo_ta || '').toString().slice(0, 120))}...</p>
         <span style="font-size:12px;color:#8a7355;"><i class="fa-solid fa-calendar"></i> ${formatDate(n.ngay)}</span>
+        <span style="display:block;margin-top:8px;color:var(--red-700);font-weight:700;font-size:13px;">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></span>
       </div>
     </article>`
     )
     .join('');
+}
+
+function openNewsDetail(id) {
+  const n = allNews.find((x) => x.id === id);
+  if (!n) return;
+  document.getElementById('news-detail-title').textContent = n.tieu_de || '';
+  document.getElementById('news-detail-meta').innerHTML = `
+    <span class="tag-pill">${escapeHtml(n.loai || 'Tin tức')}</span>
+    <span style="font-size:12px;color:#8a7355;margin-left:10px;"><i class="fa-solid fa-calendar"></i> ${formatDate(n.ngay)}</span>
+  `;
+  document.getElementById('news-detail-img').src = n.hinh_anh || 'images/slide-kyhop-1.jpg';
+  document.getElementById('news-detail-img').alt = n.tieu_de || '';
+  const noidung = (n.noi_dung || n.mo_ta || 'Chưa có nội dung chi tiết.').toString();
+  document.getElementById('news-detail-body').innerHTML = escapeHtml(noidung).replace(/\n/g, '<br>');
+  document.getElementById('modal-news-detail').classList.add('open');
 }
 
 function applyNewsFilters() {
@@ -45,4 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNews();
   document.getElementById('filter-keyword').addEventListener('input', applyNewsFilters);
   document.getElementById('filter-loai').addEventListener('change', applyNewsFilters);
+
+  const overlay = document.getElementById('modal-news-detail');
+  const closeBtn = document.getElementById('modal-news-detail-close');
+  if (closeBtn) closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
 });
