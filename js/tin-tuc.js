@@ -65,6 +65,12 @@ async function loadNews() {
   try {
     allNews = await fetchAll('tin_tuc', { sort: '-ngay' });
     renderNewsList(allNews);
+
+    // Nếu mở bằng link có ?id=... (ví dụ bấm từ slider trang chủ) thì tự mở
+    // modal chi tiết của đúng bài đó.
+    const params = new URLSearchParams(window.location.search);
+    const openId = params.get('id');
+    if (openId) openNewsDetail(openId);
   } catch (e) {
     console.error(e);
     document.getElementById('news-list').innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Không thể tải tin tức</div>`;
