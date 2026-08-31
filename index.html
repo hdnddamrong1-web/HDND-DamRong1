@@ -14,61 +14,65 @@
 <body>
 <header id="site-header"></header>
 
-<!-- HERO -->
-<section class="hero">
-  <img src="images/hero-banner.png" alt="Hội đồng Nhân dân xã Đam Rông 1 - Lắng nghe - Kết nối - Đồng hành - Cổng thông tin và tương tác cử tri" class="hero-banner-img">
+<div class="home-top-flow" id="home-top-flow">
+  <!-- HERO BANNER (luôn ở đầu tiên) -->
+  <section class="hero">
+    <img src="images/hero-banner.png" alt="Hội đồng Nhân dân xã Đam Rông 1 - Lắng nghe - Kết nối - Đồng hành - Cổng thông tin và tương tác cử tri" class="hero-banner-img">
+  </section>
 
-  <!-- Hero Action Cards: 4 nút cốt lõi, 2 hàng -->
-  <div class="action-grid">
-    <a href="gui-kien-nghi.html" class="action-card card-red">
-      <span class="icon-circle"><i class="fa-solid fa-pen-to-square"></i></span>
-      <span class="txt">
-        <h3>Gửi kiến nghị</h3>
-        <p>Gửi ý kiến, kiến nghị đến HĐND xã</p>
-      </span>
-      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-    </a>
-    <a href="tra-cuu.html" class="action-card card-green">
-      <span class="icon-circle"><i class="fa-solid fa-magnifying-glass"></i></span>
-      <span class="txt">
-        <h3>Tra cứu kiến nghị</h3>
-        <p>Theo dõi tiến độ xử lý bằng mã tra cứu</p>
-      </span>
-      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-    </a>
-    <a href="van-ban.html" class="action-card card-orange">
-      <span class="icon-circle"><i class="fa-solid fa-file-lines"></i></span>
-      <span class="txt">
-        <h3>Tra cứu văn bản</h3>
-        <p>Nghị quyết, báo cáo, kế hoạch, chỉ đạo</p>
-      </span>
-      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-    </a>
-    <a href="hoat-dong.html" class="action-card card-blue">
-      <span class="icon-circle"><i class="fa-solid fa-calendar-days"></i></span>
-      <span class="txt">
-        <h3>Lịch hoạt động / Tin tức</h3>
-        <p>Lịch kỳ họp, giám sát, tiếp xúc cử tri</p>
-      </span>
-      <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-    </a>
-  </div>
-</section>
-
-<!-- SLIDER HOẠT ĐỘNG -->
-<section class="section">
-  <div class="container">
-    <h2 class="section-title"><i class="fa-solid fa-images"></i> Hoạt động nổi bật của địa phương</h2>
-    <div class="slider-wrap" id="home-slider">
-      <div class="slider-track" id="slider-track">
-        <!-- slides được render bằng JS -->
+  <!-- SLIDER HOẠT ĐỘNG (ngay sau banner) -->
+  <section class="section" id="slider-section">
+    <div class="container">
+      <h2 class="section-title"><i class="fa-solid fa-images"></i> Hoạt động nổi bật của địa phương</h2>
+      <div class="slider-wrap" id="home-slider">
+        <div class="slider-track" id="slider-track">
+          <!-- slides được render bằng JS -->
+        </div>
+        <button class="slider-btn prev" id="slider-prev" aria-label="Trước"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="slider-btn next" id="slider-next" aria-label="Tiếp"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="slider-dots" id="slider-dots"></div>
       </div>
-      <button class="slider-btn prev" id="slider-prev" aria-label="Trước"><i class="fa-solid fa-chevron-left"></i></button>
-      <button class="slider-btn next" id="slider-next" aria-label="Tiếp"><i class="fa-solid fa-chevron-right"></i></button>
-      <div class="slider-dots" id="slider-dots"></div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <!-- 4 NÚT BẤM NHANH (sau slider) -->
+  <section class="hero-actions-section">
+    <div class="action-grid">
+      <a href="gui-kien-nghi.html" class="action-card card-red">
+        <span class="icon-circle"><i class="fa-solid fa-pen-to-square"></i></span>
+        <span class="txt">
+          <h3>Gửi kiến nghị</h3>
+          <p>Gửi ý kiến, kiến nghị đến HĐND xã</p>
+        </span>
+        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+      </a>
+      <a href="tra-cuu.html" class="action-card card-green">
+        <span class="icon-circle"><i class="fa-solid fa-magnifying-glass"></i></span>
+        <span class="txt">
+          <h3>Tra cứu kiến nghị</h3>
+          <p>Theo dõi tiến độ xử lý bằng mã tra cứu</p>
+        </span>
+        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+      </a>
+      <a href="van-ban.html" class="action-card card-orange">
+        <span class="icon-circle"><i class="fa-solid fa-file-lines"></i></span>
+        <span class="txt">
+          <h3>Tra cứu văn bản</h3>
+          <p>Nghị quyết, báo cáo, kế hoạch, chỉ đạo</p>
+        </span>
+        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+      </a>
+      <a href="hoat-dong.html" class="action-card card-blue">
+        <span class="icon-circle"><i class="fa-solid fa-calendar-days"></i></span>
+        <span class="txt">
+          <h3>Lịch hoạt động / Tin tức</h3>
+          <p>Lịch kỳ họp, giám sát, tiếp xúc cử tri</p>
+        </span>
+        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
+      </a>
+    </div>
+  </section>
+</div>
 
 <!-- VĂN BẢN MỚI & CỬ TRI HỎI - HĐND TRẢ LỜI -->
 <section class="section" style="padding-top:0;">
