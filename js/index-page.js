@@ -19,12 +19,13 @@ async function loadSlider() {
     track.innerHTML = sliderItems
       .map(
         (item) => `
-      <div class="slide">
+      <div class="slide" onclick="location.href='tin-tuc.html?id=${item.id}'" style="cursor:pointer;">
         <img src="${escapeHtml(item.hinh_anh || 'images/slide-kyhop-1.jpg')}" alt="${escapeHtml(item.tieu_de)}" loading="lazy">
         <div class="slide-caption">
           <span class="tag">${escapeHtml(item.loai || 'Hoạt động HĐND')}</span>
           <h3>${escapeHtml(item.tieu_de)}</h3>
           <p>${escapeHtml((item.mo_ta || '').toString().slice(0, 160))}</p>
+          <span class="slide-readmore">Xem chi tiết <i class="fa-solid fa-arrow-right"></i></span>
         </div>
       </div>`
       )
