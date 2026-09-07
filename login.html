@@ -76,7 +76,7 @@
     try {
       const result = await loginWithEmailPassword(email, password);
       if (result.ok) {
-        window.location.href = 'dashboard.html';
+        window.location.href = isRepresentative() ? 'dai-bieu.html' : 'dashboard.html';
       } else {
         errEl.textContent = result.message;
         errEl.classList.add('show');
@@ -95,7 +95,7 @@
   // Nếu đã đăng nhập rồi thì chuyển thẳng vào dashboard
   waitForAuth().then(() => {
     if (isLoggedIn()) {
-      window.location.href = 'dashboard.html';
+      window.location.href = isRepresentative() ? 'dai-bieu.html' : 'dashboard.html';
     }
   });
 </script>
