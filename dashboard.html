@@ -23,6 +23,7 @@
       <a href="#van-ban" data-tab="van-ban"><i class="fa-solid fa-file-lines"></i> Văn bản</a>
       <a href="#tin-tuc" data-tab="tin-tuc"><i class="fa-solid fa-newspaper"></i> Tin tức / Hoạt động</a>
       <a href="#lich" data-tab="lich"><i class="fa-solid fa-calendar-days"></i> Lịch hoạt động</a>
+      <a href="#dai-bieu" data-tab="dai-bieu"><i class="fa-solid fa-user-tie"></i> Dự thảo & Đại biểu</a>
       <a href="index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
     </nav>
   </aside>
@@ -131,6 +132,21 @@
         </table>
       </div>
     </section>
+
+    <!-- TAB: DỰ THẢO & ĐẠI BIỂU -->
+    <section class="tab-panel" id="tab-dai-bieu" style="display:none;">
+      <div class="admin-topbar" style="margin-bottom:14px;">
+        <div></div>
+        <button class="btn-primary-red" id="btn-add-dt"><i class="fa-solid fa-plus"></i> Thêm văn bản dự thảo</button>
+      </div>
+      <p class="helper-text" style="margin-bottom:14px;">Mục này dành cho Cán bộ/Admin quản lý văn bản dự thảo để đại biểu HĐND (tài khoản có vai trò "Đại biểu") vào xem, tải và gửi ý kiến đóng góp. Đại biểu KHÔNG thấy mục này trong Dashboard — họ có trang riêng <b>dai-bieu.html</b>.</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Tiêu đề</th><th>Hạn góp ý</th><th>Trạng thái</th><th>Số ý kiến</th><th>Đã ban hành</th><th>Hành động</th></tr></thead>
+          <tbody id="dt-table-body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -234,6 +250,77 @@
       <div class="form-group"><label>Địa điểm</label><input type="text" class="form-control" id="lhd-diadiem"></div>
       <div class="form-group"><label>Nội dung chi tiết</label><textarea class="form-control" id="lhd-noidung"></textarea></div>
       <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu hoạt động</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Thêm/Sửa văn bản dự thảo -->
+<div class="modal-overlay" id="modal-dt">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-dt-close">&times;</button>
+    <h3 id="modal-dt-title"><i class="fa-solid fa-file-lines"></i> Thêm văn bản dự thảo</h3>
+    <form id="form-dt">
+      <input type="hidden" id="dt-id">
+      <div class="form-group"><label>Tiêu đề *</label><input type="text" class="form-control" id="dt-tieude" required></div>
+      <div class="form-group"><label>Mô tả / trích yếu</label><textarea class="form-control" id="dt-mota"></textarea></div>
+      <div class="form-group">
+        <label>File dự thảo (PDF, Word...)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="form-control" id="dt-file" placeholder="Dán URL file hoặc bấm Tải lên" style="flex:1;min-width:180px;">
+          <button type="button" class="btn btn-outline" id="dt-upload-btn"><i class="fa-solid fa-upload"></i> Tải file lên</button>
+          <input type="file" id="dt-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf" style="display:none;">
+        </div>
+        <div id="dt-file-preview" style="margin-top:8px;"></div>
+      </div>
+      <div class="form-group"><label>Hạn góp ý</label><input type="datetime-local" class="form-control" id="dt-han"></div>
+      <div class="form-group"><label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="dt-khoa" style="width:auto;"> Khoá góp ý ngay (đại biểu chỉ xem, không sửa/gửi thêm được dù chưa hết hạn)</label></div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu văn bản dự thảo</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Xem ý kiến đóng góp của 1 văn bản dự thảo -->
+<div class="modal-overlay" id="modal-ykien-list">
+  <div class="modal-box" style="max-width:720px;">
+    <button class="modal-close" id="modal-ykien-list-close">&times;</button>
+    <h3 id="modal-ykien-list-title"><i class="fa-solid fa-comments"></i> Ý kiến đóng góp</h3>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button type="button" class="btn btn-outline" id="btn-export-excel"><i class="fa-solid fa-file-excel"></i> Xuất Excel (CSV)</button>
+      <button type="button" class="btn btn-outline" id="btn-export-word"><i class="fa-solid fa-file-word"></i> Xuất Word</button>
+    </div>
+    <div id="ykien-list-body"></div>
+  </div>
+</div>
+
+<!-- MODAL: Đăng ban hành chính thức -->
+<div class="modal-overlay" id="modal-banhanh">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-banhanh-close">&times;</button>
+    <h3><i class="fa-solid fa-stamp"></i> Đăng văn bản chính thức</h3>
+    <p class="helper-text" style="margin-bottom:14px;">Dự thảo đã được ký/đóng dấu thành Nghị quyết sẽ được tạo thành 1 bản ghi mới trong mục "Văn bản" công khai để người dân xem/tải. Đồng chí có thể chỉnh lại thông tin trước khi đăng.</p>
+    <form id="form-banhanh">
+      <input type="hidden" id="bh-draft-id">
+      <div class="form-group"><label>Tiêu đề văn bản chính thức *</label><input type="text" class="form-control" id="bh-tieude" required></div>
+      <div class="form-row2">
+        <div class="form-group"><label>Số hiệu</label><input type="text" class="form-control" id="bh-sohieu"></div>
+        <div class="form-group"><label>Loại *</label>
+          <select class="form-control" id="bh-loai" required>
+            <option>Nghị quyết</option><option>Báo cáo</option><option>Kế hoạch</option><option>Văn bản chỉ đạo</option><option>Thông báo</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Ngày ban hành *</label><input type="date" class="form-control" id="bh-ngay" required></div>
+      <div class="form-group"><label>Mô tả / trích yếu</label><textarea class="form-control" id="bh-mota"></textarea></div>
+      <div class="form-group">
+        <label>File văn bản chính thức (PDF, Word...)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" class="form-control" id="bh-file" placeholder="Dán URL file (bản đã ký/đóng dấu) hoặc bấm Tải lên" style="flex:1;min-width:180px;">
+          <button type="button" class="btn btn-outline" id="bh-upload-btn"><i class="fa-solid fa-upload"></i> Tải file lên</button>
+          <input type="file" id="bh-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf" style="display:none;">
+        </div>
+        <div id="bh-file-preview" style="margin-top:8px;"></div>
+      </div>
+      <button type="submit" class="btn-submit"><i class="fa-solid fa-stamp"></i> Đăng ra trang công khai</button>
     </form>
   </div>
 </div>
