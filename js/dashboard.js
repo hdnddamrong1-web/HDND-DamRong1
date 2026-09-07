@@ -5,7 +5,7 @@ let linhvucChart = null;
 let cachedKienNghi = [];
 
 async function bootDashboard() {
-  const ok = await guardAdminPage();
+  const ok = await guardStaffPage();
   if (!ok) return;
   initAdminHeader();
   initTabNav();
@@ -26,10 +26,21 @@ async function bootDashboard() {
   document.getElementById('btn-add-lhd').addEventListener('click', () => openLhdModal(null));
   document.getElementById('form-lhd').addEventListener('submit', submitLhdForm);
 
+  document.getElementById('btn-add-dt').addEventListener('click', () => openDtModal(null));
+  document.getElementById('form-dt').addEventListener('submit', submitDtForm);
+  document.getElementById('form-banhanh').addEventListener('submit', submitBanHanhForm);
+  initDtFileUpload();
+  initBhFileUpload();
+  document.getElementById('btn-export-excel').addEventListener('click', exportYkienExcel);
+  document.getElementById('btn-export-word').addEventListener('click', exportYkienWord);
+
   bindModalClose('modal-kn', 'modal-kn-close');
   bindModalClose('modal-vb', 'modal-vb-close');
   bindModalClose('modal-tt', 'modal-tt-close');
   bindModalClose('modal-lhd', 'modal-lhd-close');
+  bindModalClose('modal-dt', 'modal-dt-close');
+  bindModalClose('modal-ykien-list', 'modal-ykien-list-close');
+  bindModalClose('modal-banhanh', 'modal-banhanh-close');
 }
 
 /* ---------- Header thông tin admin ---------- */
@@ -52,7 +63,8 @@ function switchTab(tabName) {
     'kien-nghi': 'Kiến nghị cử tri',
     'van-ban': 'Quản lý văn bản',
     'tin-tuc': 'Quản lý tin tức / hoạt động',
-    'lich': 'Quản lý lịch hoạt động'
+    'lich': 'Quản lý lịch hoạt động',
+    'dai-bieu': 'Dự thảo & Ý kiến đại biểu'
   };
   document.getElementById('page-title').textContent = titles[tabName] || 'Dashboard';
   document.getElementById('admin-sidebar').classList.remove('open');
@@ -62,6 +74,7 @@ function switchTab(tabName) {
   if (tabName === 'van-ban') loadVanBanTable();
   if (tabName === 'tin-tuc') loadTinTucTable();
   if (tabName === 'lich') loadLichTable();
+  if (tabName === 'dai-bieu') loadDtTable();
 }
 
 function initTabNav() {
@@ -637,6 +650,328 @@ async function submitLhdForm(e) {
   } catch (e) {
     console.error(e);
     alert('Có lỗi khi lưu hoạt động.');
+  }
+}
+
+/* ---------- DỰ THẢO & Ý KIẾN ĐẠI BIỂU ---------- */
+let cachedDrafts = [];
+let cachedYkiens = [];
+
+async function loadDtTable() {
+  const tbody = document.getElementById('dt-table-body');
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i></td></tr>`;
+  try {
+    const [drafts, ykiens] = await Promise.all([
+      fetchAll('van_ban_du_thao', { sort: '-created_at' }),
+      fetchAll('y_kien_dong_gop')
+    ]);
+    cachedDrafts = drafts;
+    cachedYkiens = ykiens;
+    renderDtTable();
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="6">Lỗi tải dữ liệu (có thể chưa tạo bảng van_ban_du_thao / y_kien_dong_gop trên Supabase)</td></tr>`;
+  }
+}
+
+function isDtLocked(d) {
+  if (d.khoa_gop_y) return true;
+  if (d.han_gop_y && new Date(d.han_gop_y).getTime() < Date.now()) return true;
+  return false;
+}
+
+function renderDtTable() {
+  const tbody = document.getElementById('dt-table-body');
+  if (cachedDrafts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#a89474;">Chưa có văn bản dự thảo nào</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cachedDrafts
+    .map((d) => {
+      const count = cachedYkiens.filter((y) => y.van_ban_du_thao_id === d.id).length;
+      const locked = isDtLocked(d);
+      return `
+      <tr>
+        <td>${escapeHtml(d.tieu_de)}</td>
+        <td>${d.han_gop_y ? formatDate(d.han_gop_y) : '<span style="color:#a89474;">Chưa đặt</span>'}</td>
+        <td>${locked ? '<span class="status-pill" style="background:#fde3e3;color:#9c1c1c;">Đã khoá</span>' : '<span class="status-pill status-done">Đang mở</span>'}</td>
+        <td><button class="icon-btn" onclick="openYkienListModal('${d.id}')" title="Xem ý kiến"><i class="fa-solid fa-comments"></i> ${count}</button></td>
+        <td>${d.da_ban_hanh ? '<i class="fa-solid fa-circle-check" style="color:var(--green-600);"></i> Rồi' : '<span style="color:#a89474;">Chưa</span>'}</td>
+        <td>
+          <button class="icon-btn" onclick="openDtModal('${d.id}')" title="Sửa"><i class="fa-solid fa-pen"></i></button>
+          <button class="icon-btn" onclick="toggleDtLock('${d.id}')" title="${locked ? 'Mở khoá góp ý' : 'Khoá góp ý'}"><i class="fa-solid ${locked ? 'fa-lock-open' : 'fa-lock'}"></i></button>
+          ${!d.da_ban_hanh ? `<button class="icon-btn" onclick="openBanHanhModal('${d.id}')" title="Đăng ban hành chính thức"><i class="fa-solid fa-stamp"></i></button>` : ''}
+          <button class="icon-btn" onclick="deleteRecord('van_ban_du_thao','${d.id}', loadDtTable)" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    })
+    .join('');
+}
+
+async function toggleDtLock(id) {
+  const d = cachedDrafts.find((x) => x.id === id);
+  if (!d) return;
+  const newVal = !d.khoa_gop_y;
+  try {
+    const { error } = await supabaseClient.from('van_ban_du_thao').update({ khoa_gop_y: newVal }).eq('id', id);
+    if (error) throw error;
+    loadDtTable();
+  } catch (e) {
+    console.error(e);
+    alert('Có lỗi khi cập nhật trạng thái khoá góp ý.');
+  }
+}
+
+function renderDtFilePreview(url) {
+  const preview = document.getElementById('dt-file-preview');
+  if (!preview) return;
+  preview.innerHTML = url
+    ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--red-700);font-weight:700;"><i class="fa-solid fa-file-arrow-down"></i> Xem file đã tải</a>`
+    : '';
+}
+
+function openDtModal(id) {
+  document.getElementById('form-dt').reset();
+  document.getElementById('modal-dt-title').innerHTML = id ? '<i class="fa-solid fa-file-lines"></i> Sửa văn bản dự thảo' : '<i class="fa-solid fa-file-lines"></i> Thêm văn bản dự thảo';
+  document.getElementById('dt-id').value = id || '';
+  renderDtFilePreview('');
+  if (id) {
+    const d = cachedDrafts.find((x) => x.id === id);
+    if (d) {
+      document.getElementById('dt-tieude').value = d.tieu_de || '';
+      document.getElementById('dt-mota').value = d.mo_ta || '';
+      document.getElementById('dt-file').value = d.file_url || '';
+      renderDtFilePreview(d.file_url || '');
+      document.getElementById('dt-han').value = d.han_gop_y ? new Date(d.han_gop_y).toISOString().slice(0, 16) : '';
+      document.getElementById('dt-khoa').checked = !!d.khoa_gop_y;
+    }
+  }
+  document.getElementById('modal-dt').classList.add('open');
+}
+
+function initDtFileUpload() {
+  const uploadBtn = document.getElementById('dt-upload-btn');
+  const fileInput = document.getElementById('dt-file-input');
+  const urlInput = document.getElementById('dt-file');
+  if (!uploadBtn || !fileInput) return;
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File quá lớn (giới hạn 10MB).');
+      fileInput.value = '';
+      return;
+    }
+    const originalHtml = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+    try {
+      const url = await uploadToStorage(file, 'du-thao');
+      urlInput.value = url;
+      renderDtFilePreview(url);
+    } catch (e) {
+      console.error(e);
+      alert('Có lỗi khi tải file lên.');
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalHtml;
+      fileInput.value = '';
+    }
+  });
+  urlInput.addEventListener('input', () => renderDtFilePreview(urlInput.value.trim()));
+}
+
+async function submitDtForm(e) {
+  e.preventDefault();
+  const id = document.getElementById('dt-id').value;
+  const hanVal = document.getElementById('dt-han').value;
+  const payload = {
+    tieu_de: document.getElementById('dt-tieude').value.trim(),
+    mo_ta: document.getElementById('dt-mota').value.trim(),
+    file_url: document.getElementById('dt-file').value.trim(),
+    han_gop_y: hanVal ? new Date(hanVal).toISOString() : null,
+    khoa_gop_y: document.getElementById('dt-khoa').checked
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('van_ban_du_thao').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      payload.da_ban_hanh = false;
+      const { error } = await supabaseClient.from('van_ban_du_thao').insert(payload);
+      if (error) throw error;
+    }
+    document.getElementById('modal-dt').classList.remove('open');
+    loadDtTable();
+  } catch (e) {
+    console.error(e);
+    alert('Có lỗi khi lưu văn bản dự thảo.');
+  }
+}
+
+/* ---------- Xem / xuất ý kiến đóng góp ---------- */
+let currentYkienDraft = null;
+
+function openYkienListModal(draftId) {
+  const d = cachedDrafts.find((x) => x.id === draftId);
+  if (!d) return;
+  currentYkienDraft = d;
+  const list = cachedYkiens.filter((y) => y.van_ban_du_thao_id === draftId);
+  document.getElementById('modal-ykien-list-title').innerHTML = `<i class="fa-solid fa-comments"></i> Ý kiến đóng góp: ${escapeHtml(d.tieu_de)}`;
+  const body = document.getElementById('ykien-list-body');
+  body.innerHTML = list.length
+    ? list
+        .map(
+          (y) => `
+    <div style="border-bottom:1px solid var(--cream-200);padding:12px 0;">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+        <b style="color:var(--red-800);">${escapeHtml(y.dai_bieu_ten || y.dai_bieu_email)}</b>
+        <span style="font-size:12px;color:#8a7355;">${y.ngay_sua ? 'Sửa lần cuối: ' + formatDate(y.ngay_sua) : 'Gửi: ' + formatDate(y.ngay_gui)}</span>
+      </div>
+      <p style="margin:6px 0 0;font-size:13.5px;white-space:pre-wrap;">${escapeHtml(y.noi_dung)}</p>
+    </div>`
+        )
+        .join('')
+    : `<div class="empty-state"><i class="fa-solid fa-comment-slash"></i>Chưa có ý kiến đóng góp nào</div>`;
+  document.getElementById('modal-ykien-list').classList.add('open');
+}
+
+function exportYkienExcel() {
+  if (!currentYkienDraft) return;
+  const list = cachedYkiens.filter((y) => y.van_ban_du_thao_id === currentYkienDraft.id);
+  if (list.length === 0) {
+    alert('Chưa có ý kiến nào để xuất.');
+    return;
+  }
+  const csvEscape = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
+  const rows = [['Đại biểu', 'Email', 'Ngày gửi', 'Ngày sửa', 'Nội dung ý kiến']];
+  list.forEach((y) => {
+    rows.push([y.dai_bieu_ten || '', y.dai_bieu_email || '', formatDate(y.ngay_gui), y.ngay_sua ? formatDate(y.ngay_sua) : '', y.noi_dung || '']);
+  });
+  const csvContent = '\uFEFF' + rows.map((r) => r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `y-kien-dong-gop-${(currentYkienDraft.tieu_de || 'van-ban').replace(/[^\w\u00C0-\u1EF9]+/g, '-')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportYkienWord() {
+  if (!currentYkienDraft) return;
+  const list = cachedYkiens.filter((y) => y.van_ban_du_thao_id === currentYkienDraft.id);
+  if (list.length === 0) {
+    alert('Chưa có ý kiến nào để xuất.');
+    return;
+  }
+  const itemsHtml = list
+    .map(
+      (y) => `
+    <p><b>${escapeHtml(y.dai_bieu_ten || y.dai_bieu_email)}</b> (${y.ngay_sua ? 'sửa: ' + formatDate(y.ngay_sua) : 'gửi: ' + formatDate(y.ngay_gui)})</p>
+    <p style="margin:0 0 14px;white-space:pre-wrap;">${escapeHtml(y.noi_dung)}</p>`
+    )
+    .join('<hr>');
+  const htmlDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+    <h2>TỔNG HỢP Ý KIẾN ĐÓNG GÓP</h2>
+    <h3>${escapeHtml(currentYkienDraft.tieu_de)}</h3>
+    ${itemsHtml}
+  </body></html>`;
+  const blob = new Blob(['\uFEFF' + htmlDoc], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `y-kien-dong-gop-${(currentYkienDraft.tieu_de || 'van-ban').replace(/[^\w\u00C0-\u1EF9]+/g, '-')}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- Đăng ban hành chính thức (dự thảo -> văn bản công khai) ---------- */
+function renderBhFilePreview(url) {
+  const preview = document.getElementById('bh-file-preview');
+  if (!preview) return;
+  preview.innerHTML = url
+    ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:var(--red-700);font-weight:700;"><i class="fa-solid fa-file-arrow-down"></i> Xem file đã tải</a>`
+    : '';
+}
+
+function openBanHanhModal(draftId) {
+  const d = cachedDrafts.find((x) => x.id === draftId);
+  if (!d) return;
+  document.getElementById('form-banhanh').reset();
+  document.getElementById('bh-draft-id').value = draftId;
+  document.getElementById('bh-tieude').value = d.tieu_de || '';
+  document.getElementById('bh-mota').value = d.mo_ta || '';
+  document.getElementById('bh-file').value = '';
+  renderBhFilePreview('');
+  document.getElementById('bh-ngay').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('modal-banhanh').classList.add('open');
+}
+
+function initBhFileUpload() {
+  const uploadBtn = document.getElementById('bh-upload-btn');
+  const fileInput = document.getElementById('bh-file-input');
+  const urlInput = document.getElementById('bh-file');
+  if (!uploadBtn || !fileInput) return;
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File quá lớn (giới hạn 10MB).');
+      fileInput.value = '';
+      return;
+    }
+    const originalHtml = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+    try {
+      const url = await uploadToStorage(file, 'van-ban');
+      urlInput.value = url;
+      renderBhFilePreview(url);
+    } catch (e) {
+      console.error(e);
+      alert('Có lỗi khi tải file lên.');
+    } finally {
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = originalHtml;
+      fileInput.value = '';
+    }
+  });
+  urlInput.addEventListener('input', () => renderBhFilePreview(urlInput.value.trim()));
+}
+
+async function submitBanHanhForm(e) {
+  e.preventDefault();
+  const draftId = document.getElementById('bh-draft-id').value;
+  const payload = {
+    tieu_de: document.getElementById('bh-tieude').value.trim(),
+    so_hieu: document.getElementById('bh-sohieu').value.trim(),
+    loai: document.getElementById('bh-loai').value,
+    ngay_ban_hanh: new Date(document.getElementById('bh-ngay').value).toISOString(),
+    mo_ta: document.getElementById('bh-mota').value.trim(),
+    file_url: document.getElementById('bh-file').value.trim()
+  };
+  try {
+    const { data, error } = await supabaseClient.from('van_ban').insert(payload).select();
+    if (error) throw error;
+    const newId = data && data[0] ? data[0].id : null;
+    const { error: err2 } = await supabaseClient
+      .from('van_ban_du_thao')
+      .update({ da_ban_hanh: true, van_ban_chinh_thuc_id: newId, khoa_gop_y: true })
+      .eq('id', draftId);
+    if (err2) throw err2;
+    document.getElementById('modal-banhanh').classList.remove('open');
+    alert('Đã đăng văn bản chính thức lên trang công khai "Văn bản". Góp ý cho dự thảo này cũng tự động được khoá lại.');
+    loadDtTable();
+  } catch (e) {
+    console.error(e);
+    alert('Có lỗi khi đăng văn bản chính thức.');
   }
 }
 
