@@ -52,6 +52,13 @@ function getAdminRole() {
   return meta.vai_tro || 'Cán bộ';
 }
 
+/* Đại biểu HĐND là 1 vai trò riêng (vai_tro = 'Đại biểu' trong user_metadata),
+   chỉ được xem văn bản dự thảo & gửi ý kiến đóng góp - KHÔNG có quyền quản trị
+   như Cán bộ (không vào được các tab Kiến nghị/Văn bản/Tin tức của Dashboard). */
+function isRepresentative() {
+  return isLoggedIn() && getAdminRole() === 'Đại biểu';
+}
+
 async function logout() {
   try {
     await supabaseClient.auth.signOut();
@@ -79,8 +86,9 @@ async function renderAuthArea() {
   if (!el) return;
   await waitForAuth();
   if (isLoggedIn()) {
+    const rep = isRepresentative();
     el.innerHTML = `
-      <a href="dashboard.html" class="dashboard-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+      <a href="${rep ? 'dai-bieu.html' : 'dashboard.html'}" class="dashboard-link"><i class="fa-solid fa-chart-line"></i><span>${rep ? 'Khu vực đại biểu' : 'Dashboard'}</span></a>
       <span class="admin-chip">
         <span class="name">${escapeHtml(getAdminDisplayName())}</span>
         <span class="badge">${escapeHtml(getAdminRole())}</span>
@@ -112,6 +120,36 @@ async function guardAdminPage() {
   await waitForAuth();
   if (!isLoggedIn()) {
     window.location.href = 'login.html';
+    return false;
+  }
+  return true;
+}
+
+/* Bảo vệ trang Dashboard quản trị: CHỈ Cán bộ (không phải Đại biểu) mới vào được.
+   Đại biểu lỡ vào nhầm sẽ tự chuyển sang khu vực riêng của mình. */
+async function guardStaffPage() {
+  await waitForAuth();
+  if (!isLoggedIn()) {
+    window.location.href = 'login.html';
+    return false;
+  }
+  if (isRepresentative()) {
+    window.location.href = 'dai-bieu.html';
+    return false;
+  }
+  return true;
+}
+
+/* Bảo vệ trang Đại biểu: CHỈ tài khoản có vai_tro = 'Đại biểu' mới vào được.
+   Người dân chưa đăng nhập hoặc Cán bộ thường sẽ không truy cập được trang này. */
+async function guardRepresentativePage() {
+  await waitForAuth();
+  if (!isLoggedIn()) {
+    window.location.href = 'login.html';
+    return false;
+  }
+  if (!isRepresentative()) {
+    window.location.href = 'index.html';
     return false;
   }
   return true;
