@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khu vực Đại biểu HĐND - HĐND Xã Đam Rông 1</title>
+<link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header"></header>
+
+<section class="page-hero">
+  <h1><i class="fa-solid fa-user-tie"></i> Khu vực Đại biểu HĐND</h1>
+  <p>Xem văn bản dự thảo & gửi ý kiến đóng góp</p>
+  <div class="breadcrumb"><a href="index.html">Trang chủ</a> / Đại biểu HĐND</div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="alert alert-error" id="dt-error"></div>
+    <div id="dt-list">
+      <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải văn bản dự thảo...</div>
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer"></footer>
+
+<!-- MODAL: Gửi / Sửa ý kiến đóng góp -->
+<div class="modal-overlay" id="modal-ykien">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-ykien-close">&times;</button>
+    <h3 id="modal-ykien-title"><i class="fa-solid fa-comment-dots"></i> Ý kiến đóng góp</h3>
+    <p class="helper-text" id="modal-ykien-doc-title" style="font-weight:700;color:var(--red-700);margin-bottom:14px;"></p>
+    <div class="form-group">
+      <label>Đồng chí vui lòng nhập/chỉnh sửa ý kiến đóng góp tại đây <span class="req">*</span></label>
+      <textarea class="form-control" id="ykien-noidung" style="min-height:160px;" placeholder="Nhập ý kiến đóng góp của đồng chí..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" class="btn btn-outline" id="ykien-cancel-btn"><i class="fa-solid fa-rotate-left"></i> Quay lại</button>
+      <button type="button" class="btn-primary-red" id="ykien-submit-btn" style="border-radius:22px;"><i class="fa-solid fa-paper-plane"></i> Gửi ý kiến</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/common.js"></script>
+<script src="js/dai-bieu.js"></script>
+</body>
+</html>
