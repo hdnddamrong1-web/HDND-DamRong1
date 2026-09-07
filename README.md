@@ -1,8 +1,10 @@
 # Cổng thông tin & Tương tác cử tri – HĐND Xã Đam Rông 1
 
 Website tĩnh (HTML/CSS/JS + **Supabase** làm backend) dành cho Hội đồng Nhân dân xã
-Đam Rông 1, phục vụ 2 nhóm người dùng: **Người dân** (không cần đăng nhập) và
-**Cán bộ/Admin** (đăng nhập bằng tài khoản Supabase Auth để vào khu vực quản trị).
+Đam Rông 1, phục vụ 3 nhóm người dùng: **Người dân** (không cần đăng nhập),
+**Cán bộ/Admin** (đăng nhập bằng tài khoản Supabase Auth để vào khu vực quản trị `dashboard.html`),
+và **Đại biểu HĐND** (đăng nhập bằng tài khoản Supabase Auth riêng, chỉ vào được khu vực
+riêng `dai-bieu.html` để xem văn bản dự thảo và gửi ý kiến đóng góp — xem chi tiết mục 1.3).
 
 > ⚙️ **Kiến trúc backend đã chuyển từ Table API của nền tảng sang Supabase** (Postgres +
 > Auth + Storage) để có thể triển khai độc lập lên Vercel (hoặc bất kỳ hosting tĩnh khác)
@@ -24,10 +26,41 @@ Website tĩnh (HTML/CSS/JS + **Supabase** làm backend) dành cho Hội đồng 
 - **`tra-cuu.html`** – Nhập mã tra cứu để xem timeline trạng thái (Đã tiếp nhận → Đang xử lý → Đã trả lời) và nội dung trả lời (nếu có), qua hàm `tra_cuu_kien_nghi()`. Có thể mở trực tiếp bằng `tra-cuu.html?code=DR1-2026-0001`. Kèm danh sách "Cử tri hỏi – HĐND trả lời" công khai.
 - **`van-ban.html`** – Danh sách văn bản (Nghị quyết/Báo cáo/Kế hoạch/Chỉ đạo/Thông báo), lọc theo từ khoá & loại.
 - **`tin-tuc.html`** – Danh sách tin tức/hoạt động dạng lưới ảnh, lọc theo loại & từ khoá. Bấm vào 1 tin → mở modal xem toàn bộ nội dung (ảnh đại diện lớn, tiêu đề, ngày, nội dung đầy đủ từ trường `noi_dung`, kèm **gallery ảnh phụ** nếu bài viết có nhiều ảnh minh hoạ).
-- **`hoat-dong.html`** – Lịch hoạt động HĐND (Kỳ họp, Giám sát, Tiếp xúc cử tri), lọc theo loại.
+- **`hoat-dong.html`** – Lịch hoạt động HĐND (Kỳ họp, Giám sát, Tiếp xúc cử tri), lọc theo loại. (Trang này vẫn tồn tại nhưng **không còn nằm trên menu điều hướng chính** — xem mục ngay dưới, menu đã đổi thành mục "Đại biểu HĐND" chỉ hiện với đại biểu.)
 - **`gioi-thieu.html`** – Giới thiệu chức năng, nhiệm vụ, cơ cấu tổ chức HĐND xã.
 - **`lien-he.html`** – Thông tin liên hệ (SĐT `0365 008 008`, email `hdnddamrong1@lamdong.gov.vn`, Facebook chính thức) + lối tắt gửi kiến nghị.
 - **`qr-thon.html`** – Sinh mã QR theo từng thôn trong **9 thôn thật**: Trung Tâm, Thanh Bình, Phi Liêng, Dơng Glê, Lăng Tô, Pul, Đạ Sơn, Đạ K'Nàng, Păng Dung (dẫn tới trang gửi kiến nghị có sẵn tham số thôn).
+
+### 🆕 1.1. Thay đổi menu điều hướng
+- Đã **gỡ bỏ mục "Hoạt động HĐND"** khỏi thanh menu chính (`js/common.js` → `NAV_ITEMS`).
+- Thay bằng mục **"Đại biểu HĐND"** — nhưng mục này **ẨN HOÀN TOÀN với người dân**: nó chỉ được chèn thêm vào menu (`renderHeader()` trong `js/common.js`) khi tài khoản đang đăng nhập có `user_metadata.vai_tro = 'Đại biểu'` (kiểm tra bằng hàm `isRepresentative()` ở `js/auth.js`), tức là chỉ hiện SAU khi đăng nhập đúng tài khoản đại biểu — người dân chưa đăng nhập hoặc cán bộ thường sẽ không bao giờ thấy mục này trên menu.
+
+### 🆕 1.2. Vai trò "Đại biểu" — 1 vai trò Supabase Auth hoàn toàn riêng, tách khỏi "Cán bộ"
+- Vai trò được lưu trong `user_metadata.vai_tro` của tài khoản Supabase Auth (giống cách lưu `Cán bộ` / `Quản trị viên` hiện có) — quản trị viên chỉ cần tạo tài khoản mới trong Supabase Dashboard (Authentication → Users → thêm user), rồi set `user_metadata: { "ho_ten": "...", "vai_tro": "Đại biểu" }`.
+- **Phân luồng đăng nhập tự động theo vai trò** (`js/auth.js`):
+  - `guardStaffPage()` — dùng cho `dashboard.html`; nếu tài khoản đăng nhập là Đại biểu thì tự động chuyển sang `dai-bieu.html` (Đại biểu không vào được khu Cán bộ).
+  - `guardRepresentativePage()` — dùng cho `dai-bieu.html`; nếu chưa đăng nhập hoặc không phải Đại biểu thì tự động chuyển ra `index.html` / `login.html`.
+  - `login.html` sau khi đăng nhập thành công cũng tự động điều hướng: Đại biểu → `dai-bieu.html`, Cán bộ/Quản trị viên → `dashboard.html`.
+- ⚠️ **Đây chỉ là điều hướng ở giao diện (route theo vai trò), KHÔNG thay cho bảo mật dữ liệu thật** — bảo mật dữ liệu thật (ai được đọc/ghi bảng nào) vẫn phải cấu hình bằng **Row Level Security (RLS)** trên Supabase, xem mục 3.
+
+### 🆕 1.3. `dai-bieu.html` — Khu vực riêng cho Đại biểu HĐND
+- Chỉ vào được sau khi đăng nhập đúng tài khoản có vai trò "Đại biểu" (`guardRepresentativePage()`).
+- **Xem & tải văn bản dự thảo**: danh sách văn bản dự thảo (bảng `van_ban_du_thao`) do Cán bộ/Admin đăng lên, kèm link tải file (PDF/Word) nếu có.
+- **Gửi ý kiến đóng góp**: mỗi văn bản dự thảo có 1 khung nhập liệu (modal) để đại biểu gửi ý kiến (bảng `y_kien_dong_gop`). Trong thời hạn góp ý, đại biểu có thể **tự chỉnh sửa lại ý kiến của chính mình** bất kỳ lúc nào (bấm lại nút để mở modal, nội dung cũ tự hiện sẵn, sửa rồi gửi lại là ghi đè lên ý kiến trước, không tạo bản ghi trùng).
+- **Tự động khoá khi hết hạn / khoá tay**: mỗi văn bản dự thảo có trường `han_gop_y` (hạn góp ý) và `khoa_gop_y` (cờ khoá tay). Khi đã quá `han_gop_y` HOẶC Admin bật `khoa_gop_y = true`, trang tự nhận biết (hàm `isDraftLocked()`) và: ẩn nút gửi/sửa, textarea chuyển `disabled`, đại biểu chỉ xem lại được ý kiến cũ của mình, không gửi/sửa thêm được.
+
+### 🆕 1.4. Dashboard Admin — tab mới "Dự thảo & Đại biểu"
+- **Chỉ Cán bộ/Admin thấy tab này** (Đại biểu đăng nhập vào `dashboard.html` sẽ bị tự chuyển hướng ra `dai-bieu.html`, không thấy được tab quản trị nào).
+- **Quản lý văn bản dự thảo**: thêm/sửa/xoá qua modal — tiêu đề, mô tả, file dự thảo (upload PDF/Word lên Supabase Storage hoặc dán URL), đặt hạn góp ý (`datetime-local`).
+- **Khoá / mở khoá góp ý bằng 1 nút bấm** (icon khoá trên mỗi dòng) — không cần chờ hết hạn mới khoá được, và có thể mở lại nếu cần gia hạn.
+- **Xem tất cả ý kiến đóng góp** của từng văn bản dự thảo (số lượng ý kiến hiện ngay trên bảng, bấm vào mở modal xem đầy đủ tên đại biểu + nội dung + ngày gửi/sửa).
+- **🆕 Xuất báo cáo tổng hợp ý kiến ra Excel hoặc Word** ngay trong modal xem ý kiến:
+  - **Xuất Excel** → tạo file `.csv` (mở trực tiếp bằng Excel, đủ dấu tiếng Việt UTF-8) gồm các cột: Đại biểu, Email, Ngày gửi, Ngày sửa, Nội dung ý kiến.
+  - **Xuất Word** → tạo file `.doc` (mở trực tiếp bằng Microsoft Word) trình bày theo từng đại biểu, dễ dùng làm báo cáo tổng hợp cho văn phòng.
+  - Cả hai được tạo **hoàn toàn ở phía trình duyệt** (không cần server), nên hoạt động ngay trên trang tĩnh này.
+- **🆕 Đăng văn bản chính thức ra trang công khai**: khi dự thảo đã được ký/đóng dấu thành Nghị quyết, Admin bấm nút (icon dấu mộc) trên dòng dự thảo tương ứng → mở modal điền lại thông tin chính thức (tiêu đề, số hiệu, loại, ngày ban hành, mô tả, file bản đã ký) → bấm "Đăng ra trang công khai" sẽ:
+  1. Tạo 1 bản ghi mới trong bảng `van_ban` (xuất hiện ngay ở trang công khai `van-ban.html` cho người dân xem/tải).
+  2. Đánh dấu dự thảo gốc là `da_ban_hanh = true` và tự động khoá góp ý (`khoa_gop_y = true`) vì văn bản đã chính thức, không cần góp ý thêm.
 
 ### Khu vực quản trị (bắt buộc đăng nhập bằng Supabase Auth)
 - **`login.html`** – Đăng nhập bằng email/mật khẩu thật qua **Supabase Auth** (không còn dùng bảng dữ liệu lộ mật khẩu như trước). Tài khoản admin do quản trị viên tự tạo trong Supabase Dashboard (Authentication → Users), **không cho phép tự đăng ký** (signup đã bị tắt).
@@ -36,6 +69,7 @@ Website tĩnh (HTML/CSS/JS + **Supabase** làm backend) dành cho Hội đồng 
   - **Kiến nghị cử tri**: danh sách, lọc theo từ khoá/trạng thái, xem chi tiết, cập nhật trạng thái, viết nội dung trả lời, chọn công khai/ẩn, và **xoá vĩnh viễn kiến nghị** (nút "Xoá" trong modal chi tiết, có xác nhận trước khi xoá).
   - **Quản lý văn bản**: thêm - sửa - xoá qua modal; hỗ trợ **tải file PDF/Word/Excel lên Supabase Storage** (hoặc dán URL file có sẵn), giới hạn 10MB — văn bản có file sẽ hiện nút "Xem/Tải văn bản" ở trang công khai `van-ban.html`.
   - **Quản lý Tin tức / Lịch hoạt động**: thêm - sửa - xoá qua modal; Tin tức hỗ trợ **upload ảnh đại diện** (dùng cho slider trang chủ + thẻ tin tức) và **upload nhiều ảnh phụ cùng lúc** (chỉ hiện khi xem chi tiết bài viết), cả hai đều lưu trực tiếp lên Supabase Storage.
+  - **🆕 Dự thảo & Đại biểu** (xem chi tiết ở mục 1.4 phía trên): quản lý văn bản dự thảo, khoá/mở góp ý, xem & xuất Excel/Word ý kiến đại biểu, đăng văn bản chính thức ra công khai.
   - Nút Đăng xuất, sidebar responsive (thu gọn trên mobile bằng nút hamburger).
 
 ### Nút Dashboard trên header
@@ -59,15 +93,16 @@ trọng đã được xử lý. Hiện tại:
 |---|---|---|
 | Trang chủ | `index.html` | – |
 | Giới thiệu | `gioi-thieu.html` | – |
-| Hoạt động HĐND | `hoat-dong.html` | – |
+| Hoạt động HĐND (không còn trên menu, vẫn truy cập được qua link trực tiếp) | `hoat-dong.html` | – |
 | Văn bản | `van-ban.html` | – |
 | Tin tức | `tin-tuc.html` | – |
 | Liên hệ | `lien-he.html` | – |
 | Gửi kiến nghị | `gui-kien-nghi.html` | `?thon=<tên thôn>` (tự chọn sẵn khi quét QR) |
 | Tra cứu kiến nghị | `tra-cuu.html` | `?code=<mã tra cứu>` (tự tra cứu khi mở link) |
 | Mã QR theo thôn | `qr-thon.html` | – |
-| Đăng nhập quản trị | `login.html` | – |
-| Dashboard quản trị | `dashboard.html` | (yêu cầu đăng nhập; tab: Tổng quan / Kiến nghị / Văn bản / Tin tức / Lịch hoạt động) |
+| Đăng nhập quản trị / đại biểu | `login.html` | – (tự chuyển đúng trang theo vai trò sau đăng nhập) |
+| Dashboard quản trị (chỉ Cán bộ/Quản trị viên) | `dashboard.html` | (yêu cầu đăng nhập; tab: Tổng quan / Kiến nghị / Văn bản / Tin tức / Lịch hoạt động / **Dự thảo & Đại biểu**) |
+| **🆕 Khu vực Đại biểu HĐND** (chỉ tài khoản vai trò đại biểu) | `dai-bieu.html` | (yêu cầu đăng nhập đúng vai trò đại biểu) |
 
 ## 3. Dữ liệu & lưu trữ — Supabase (Postgres + Auth + Storage)
 
@@ -81,25 +116,65 @@ Toàn bộ dữ liệu đọc/ghi qua **Supabase JS SDK** (`supabaseClient` kh�
 | `tin_tuc` | Tin tức / hoạt động (kèm ảnh cho slider trang chủ) | `tieu_de, loai, hinh_anh, hinh_anh_phu (mảng URL ảnh phụ, chỉ hiện ở modal chi tiết), mo_ta, noi_dung, ngay, noi_bat` |
 | `lich_hoat_dong` | Lịch hoạt động (kỳ họp/giám sát/tiếp xúc cử tri) | `tieu_de, loai, ngay, dia_diem, noi_dung` |
 | `thon` | Danh sách 9 thôn thật (dùng cho form & QR) | `ten_thon, ma_thon` |
+| 🆕 `van_ban_du_thao` | Văn bản dự thảo để đại biểu góp ý (chưa công khai) | `tieu_de, mo_ta, file_url, han_gop_y, khoa_gop_y, da_ban_hanh, van_ban_chinh_thuc_id` |
+| 🆕 `y_kien_dong_gop` | Ý kiến đóng góp của từng đại biểu cho 1 văn bản dự thảo | `van_ban_du_thao_id, dai_bieu_email, dai_bieu_ten, noi_dung, ngay_gui, ngay_sua` |
 
-Tài khoản đăng nhập admin **không còn là 1 bảng dữ liệu** — quản lý hoàn toàn qua
-**Supabase Authentication** (Authentication → Users trong Supabase Dashboard).
+Tài khoản đăng nhập admin/đại biểu **không còn là 1 bảng dữ liệu** — quản lý hoàn toàn qua
+**Supabase Authentication** (Authentication → Users trong Supabase Dashboard), phân biệt vai trò
+qua `user_metadata.vai_tro` (`Quản trị viên` / `Cán bộ` / `Đại biểu`).
+
+> ⚠️ **Cần Admin tự tạo 2 bảng mới `van_ban_du_thao` và `y_kien_dong_gop` trên Supabase**
+> (giống cách đã làm với `hinh_anh_phu` trước đây) trước khi tính năng Đại biểu hoạt động được.
+> Cấu trúc cột cần tạo:
+> ```sql
+> create table if not exists van_ban_du_thao (
+>   id uuid primary key default gen_random_uuid(),
+>   tieu_de text,
+>   mo_ta text,
+>   file_url text,
+>   han_gop_y timestamptz,
+>   khoa_gop_y boolean default false,
+>   da_ban_hanh boolean default false,
+>   van_ban_chinh_thuc_id uuid,
+>   created_at timestamptz default now()
+> );
+> create table if not exists y_kien_dong_gop (
+>   id uuid primary key default gen_random_uuid(),
+>   van_ban_du_thao_id uuid references van_ban_du_thao(id) on delete cascade,
+>   dai_bieu_email text,
+>   dai_bieu_ten text,
+>   noi_dung text,
+>   ngay_gui timestamptz,
+>   ngay_sua timestamptz,
+>   created_at timestamptz default now()
+> );
+> alter table van_ban_du_thao enable row level security;
+> alter table y_kien_dong_gop enable row level security;
+> -- Chỉ tài khoản đã đăng nhập (Cán bộ hoặc Đại biểu) mới đọc/ghi được 2 bảng này -
+> -- người dân (anon) KHÔNG được đọc/ghi vì đây là văn bản dự thảo, chưa công khai.
+> create policy "authenticated full access" on van_ban_du_thao
+>   for all to authenticated using (true) with check (true);
+> create policy "authenticated full access" on y_kien_dong_gop
+>   for all to authenticated using (true) with check (true);
+> ```
 
 ### Hàm phía server (RPC) chạy trên Supabase
 - `generate_ma_tra_cuu()` – sinh mã tra cứu tuần tự dạng `DR1-{năm}-{số thứ tự}`, tránh trùng mã.
 - `tra_cuu_kien_nghi(p_ma_tra_cuu)` – tra cứu 1 kiến nghị theo mã mà không cần mở quyền đọc toàn bảng cho khách.
 
 ### Row Level Security (RLS) — phân quyền tại database
-- **Khách/người dân (`anon`)**: được `INSERT` kiến nghị mới; chỉ `SELECT` được kiến nghị có `cong_khai = true`; `SELECT` tự do các bảng nội dung công khai (`thon`, `van_ban`, `tin_tuc`, `lich_hoat_dong`).
-- **Cán bộ đã đăng nhập (`authenticated`)**: có toàn quyền `SELECT/INSERT/UPDATE/DELETE` trên tất cả các bảng.
+- **Khách/người dân (`anon`)**: được `INSERT` kiến nghị mới; chỉ `SELECT` được kiến nghị có `cong_khai = true`; `SELECT` tự do các bảng nội dung công khai (`thon`, `van_ban`, `tin_tuc`, `lich_hoat_dong`). **Không** đọc/ghi được `van_ban_du_thao` và `y_kien_dong_gop` (dự thảo chưa công khai).
+- **Cán bộ/Đại biểu đã đăng nhập (`authenticated`)**: có toàn quyền `SELECT/INSERT/UPDATE/DELETE` trên tất cả các bảng bằng RLS hiện tại (bao gồm 2 bảng mới `van_ban_du_thao`, `y_kien_dong_gop`) — việc phân biệt "Cán bộ chỉ quản trị" và "Đại biểu chỉ xem dự thảo + gửi ý kiến" hiện đang được thực hiện **ở tầng giao diện** (route theo `user_metadata.vai_tro`, xem mục 1.2), KHÔNG phải ở RLS. Nếu cần chặn thật ở tầng dữ liệu (ví dụ ngăn 1 đại biểu sửa ý kiến của đại biểu khác qua gọi API trực tiếp), cần bổ sung RLS chi tiết hơn dựa theo `auth.jwt() ->> 'email'` — xem mục 4 & 5.
 
 ### Supabase Storage
-- Bucket `attachments` (Public) — lưu ảnh đính kèm kiến nghị (`kien-nghi/...`) và ảnh minh hoạ tin tức (`tin-tuc/...`), upload qua hàm `uploadToStorage()` trong `js/common.js`.
+- Bucket `attachments` (Public) — lưu ảnh đính kèm kiến nghị (`kien-nghi/...`), ảnh minh hoạ tin tức (`tin-tuc/...`), file văn bản (`van-ban/...`) và 🆕 file văn bản dự thảo (`du-thao/...`), upload qua hàm `uploadToStorage()` trong `js/common.js`.
 
 ## 4. Chưa triển khai / hạn chế hiện tại
 
-- Chưa gửi email/SMS/Zalo thông báo tự động khi có kiến nghị mới hoặc khi được trả lời.
-- Chưa phân quyền chi tiết giữa "Quản trị viên" và "Cán bộ" (mọi tài khoản Supabase Auth được tạo hiện có toàn quyền dashboard).
+- Chưa gửi email/SMS/Zalo thông báo tự động khi có kiến nghị mới hoặc khi được trả lời (cũng chưa có thông báo cho đại biểu khi có văn bản dự thảo mới cần góp ý).
+- Chưa phân quyền chi tiết giữa "Quản trị viên" và "Cán bộ" (mọi tài khoản Supabase Auth có vai_tro khác "Đại biểu" hiện có toàn quyền dashboard).
+- 🆕 **Phân biệt vai trò "Cán bộ" / "Đại biểu" hiện ở tầng giao diện (route theo `user_metadata.vai_tro`), CHƯA ở tầng RLS** — về mặt dữ liệu thật, 1 tài khoản đại biểu nếu gọi trực tiếp Supabase API vẫn có thể đọc/sửa bất kỳ bảng nào (vì RLS hiện cấp quyền `authenticated` = toàn quyền). Muốn chặn thật cần viết thêm RLS riêng cho `van_ban_du_thao`/`y_kien_dong_gop` dựa theo vai trò và/hoặc email trong JWT (xem gợi ý ở mục 5).
+- Chưa có cơ chế chặn 1 đại biểu sửa ý kiến của đại biểu khác ở tầng dữ liệu (giao diện hiện chỉ cho sửa ý kiến có `dai_bieu_email` khớp với email đang đăng nhập, nhưng nếu gọi API trực tiếp vẫn có thể sửa được bản ghi của người khác).
 - Tin tức chưa có trang chi tiết riêng (dùng modal xem toàn bộ nội dung ngay trên trang danh sách, không có URL riêng cho từng bài để chia sẻ).
 - Trường hiển thị tên/vai trò cán bộ trên header (`ho_ten`, `vai_tro`) lấy từ `user_metadata` của tài khoản Supabase Auth — nếu chưa được set khi tạo tài khoản, hệ thống sẽ hiển thị email và vai trò mặc định "Cán bộ".
 - Website hiện đang chạy ở 2 nơi tách biệt (dữ liệu KHÔNG đồng bộ giữa 2 nơi):
@@ -114,6 +189,9 @@ Tài khoản đăng nhập admin **không còn là 1 bảng dữ liệu** — qu
 4. Thêm thông báo email/Zalo OA khi kiến nghị được trả lời.
 5. Cân nhắc dừng/không tiếp tục cập nhật bản Hosted Deploy cũ trên nền tảng GenSpark (dùng Table API) sau khi bản Vercel + Supabase đã hoạt động ổn định, để tránh 2 nguồn dữ liệu song song gây nhầm lẫn.
 6. (Tuỳ chọn) Làm trang chi tiết riêng cho từng bài tin tức (URL dạng `tin-tuc-chi-tiet.html?id=...`) nếu cần chia sẻ link bài viết cụ thể — hiện tại xem chi tiết qua modal ngay trên trang danh sách.
+7. 🆕 Tạo 2 bảng `van_ban_du_thao` và `y_kien_dong_gop` trên Supabase (SQL mẫu ở mục 3) — **bắt buộc phải làm trước** thì tính năng Đại biểu mới hoạt động được (hiện tại code đã viết sẵn ở `js/dai-bieu.js` và `js/dashboard.js` nhưng sẽ báo lỗi "không tải được dữ liệu" nếu chưa có bảng).
+8. 🆕 Tạo tài khoản Supabase Auth cho từng đại biểu (Authentication → Users → Add user), nhớ set `user_metadata` với `"vai_tro": "Đại biểu"` và `"ho_ten": "..."` để họ đăng nhập vào đúng khu vực `dai-bieu.html`.
+9. 🆕 (Nâng cao, nếu cần bảo mật chặt hơn) Viết RLS chi tiết cho `y_kien_dong_gop` để đại biểu chỉ `UPDATE` được bản ghi có `dai_bieu_email = auth.jwt() ->> 'email'` của chính họ, thay vì dựa hoàn toàn vào logic kiểm tra ở giao diện.
 
 ## 6. Công nghệ sử dụng
 
