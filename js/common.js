@@ -5,22 +5,39 @@
 const NAV_ITEMS = [
   { href: 'index.html', label: 'Trang chủ' },
   { href: 'gioi-thieu.html', label: 'Giới thiệu' },
-  { href: 'hoat-dong.html', label: 'Hoạt động HĐND' },
   { href: 'van-ban.html', label: 'Văn bản' },
   { href: 'tin-tuc.html', label: 'Tin tức' },
   { href: 'lien-he.html', label: 'Liên hệ' }
 ];
+
+/* Mục điều hướng riêng cho Đại biểu HĐND - HOÀN TOÀN ẩn với người dân,
+   chỉ hiện trên thanh menu khi tài khoản đang đăng nhập có vai_tro = 'Đại biểu'
+   (kiểm tra ngay trong renderHeader() bên dưới, không phải ẩn bằng CSS đơn thuần). */
+const REP_NAV_ITEM = { href: 'dai-bieu.html', label: 'Đại biểu HĐND' };
 
 function currentPage() {
   const p = window.location.pathname.split('/').pop();
   return p || 'index.html';
 }
 
-function renderHeader() {
+async function renderHeader() {
   const mount = document.getElementById('site-header');
   if (!mount) return;
   const cur = currentPage();
-  const navHtml = NAV_ITEMS.map(
+
+  // Chờ xác định trạng thái đăng nhập trước khi quyết định có hiện mục "Đại biểu HĐND" hay không.
+  // Mục này CHỈ hiện khi đã đăng nhập đúng tài khoản cấp cho đại biểu.
+  let navItems = NAV_ITEMS;
+  try {
+    if (typeof waitForAuth === 'function') {
+      await waitForAuth();
+      if (typeof isRepresentative === 'function' && isRepresentative()) {
+        navItems = [...NAV_ITEMS, REP_NAV_ITEM];
+      }
+    }
+  } catch (e) { /* nếu chưa tải auth.js thì giữ nguyên menu công khai */ }
+
+  const navHtml = navItems.map(
     (item) => `<a href="${item.href}" class="${item.href === cur ? 'active' : ''}">${item.label}</a>`
   ).join('');
 
@@ -71,7 +88,7 @@ function renderFooter() {
       <div class="footer-col">
         <h5>Liên hệ</h5>
         <p><i class="fa-solid fa-location-dot"></i>&nbsp; Xã Đam Rông 1, tỉnh Lâm Đồng</p>
-        <p><i class="fa-solid fa-phone"></i>&nbsp; 0000000000</p>
+        <p><i class="fa-solid fa-phone"></i>&nbsp; 0365 008 008</p>
         <p><i class="fa-solid fa-envelope"></i>&nbsp; hdnddamrong1@lamdong.gov.vn</p>
       </div>
       <div class="footer-col">
