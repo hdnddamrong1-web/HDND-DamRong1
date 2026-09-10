@@ -3,127 +3,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HĐND Xã Đam Rông 1 - Cổng thông tin và tương tác cử tri</title>
-<meta name="description" content="Cổng thông tin và tương tác cử tri của Hội đồng Nhân dân xã Đam Rông 1 - Lắng nghe, Kết nối, Đồng hành.">
+<title>Đang bảo trì - HĐND Xã Đam Rông 1</title>
+<meta name="description" content="Cổng thông tin và tương tác cử tri của Hội đồng Nhân dân xã Đam Rông 1 đang được nâng cấp, sẽ hoạt động trở lại trong thời gian sớm nhất.">
+<meta name="robots" content="noindex">
 <link rel="icon" href="images/quoc-huy-v2.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-<link rel="stylesheet" href="css/style.css">
+<style>
+  :root{
+    --red-900:#7a0d13;
+    --red-800:#921219;
+    --red-700:#a3151c;
+    --red-600:#c31e26;
+    --gold-500:#d4af37;
+    --gold-400:#e8c766;
+    --gold-100:#fbf1d6;
+    --cream-100:#fdf6e3;
+    --ink-900:#2a1a10;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    height:100%;
+    font-family:'Be Vietnam Pro','Noto Sans',sans-serif;
+    color:var(--ink-900);
+  }
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(160deg, var(--red-900) 0%, var(--red-700) 55%, var(--red-600) 100%);
+    padding:20px;
+  }
+  .maintenance-card{
+    background:var(--cream-100);
+    border-radius:22px;
+    max-width:620px;
+    width:100%;
+    padding:46px 38px;
+    text-align:center;
+    box-shadow:0 25px 60px rgba(0,0,0,.35);
+    border:3px solid var(--gold-500);
+    position:relative;
+  }
+  .maintenance-card img.emblem{
+    width:78px;
+    height:78px;
+    object-fit:contain;
+    margin-bottom:14px;
+  }
+  .maintenance-card .icon-gear{
+    width:88px;
+    height:88px;
+    margin:0 auto 18px;
+    border-radius:50%;
+    background:var(--gold-100);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--red-700);
+    font-size:38px;
+    box-shadow:inset 0 0 0 3px var(--gold-500);
+  }
+  .icon-gear i{
+    animation:spin 3.5s linear infinite;
+    display:inline-block;
+  }
+  @keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  .maintenance-card h1{
+    color:var(--red-800);
+    font-size:26px;
+    margin:0 0 8px;
+    font-weight:800;
+  }
+  .maintenance-card p.lead{
+    font-size:16px;
+    line-height:1.7;
+    color:#5a4230;
+    margin:0 0 22px;
+  }
+  .maintenance-card .org-name{
+    font-weight:700;
+    color:var(--red-800);
+    text-transform:uppercase;
+    letter-spacing:.3px;
+    font-size:13px;
+    margin-bottom:4px;
+  }
+  .maintenance-card .slogan{
+    color:var(--gold-500);
+    font-weight:600;
+    font-size:13px;
+    margin-bottom:24px;
+  }
+  .divider{
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold-500), transparent);
+    margin:22px 0;
+  }
+  .contact-box{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    text-align:left;
+    background:#fff;
+    border-radius:14px;
+    padding:18px 20px;
+    border:1px solid var(--gold-100);
+  }
+  .contact-box .row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14.5px;
+    color:var(--ink-900);
+  }
+  .contact-box .row i{
+    color:var(--red-700);
+    width:20px;
+    text-align:center;
+  }
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--gold-100);
+    color:var(--red-800);
+    font-weight:700;
+    font-size:13px;
+    padding:8px 18px;
+    border-radius:30px;
+    margin-top:22px;
+  }
+  .status-pill .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--red-700);
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:.3;}
+  }
+  footer.mt-footer{
+    position:fixed;
+    bottom:14px;
+    left:0;
+    right:0;
+    text-align:center;
+    color:rgba(255,255,255,.75);
+    font-size:12.5px;
+    letter-spacing:.4px;
+  }
+  @media (max-width:480px){
+    .maintenance-card{padding:34px 22px;}
+    .maintenance-card h1{font-size:22px;}
+  }
+</style>
 </head>
 <body>
-<header id="site-header"></header>
 
-<div class="home-top-flow" id="home-top-flow">
-  <!-- HERO BANNER (luôn ở đầu tiên) -->
-  <section class="hero">
-    <img src="images/hero-banner.png" alt="Hội đồng Nhân dân xã Đam Rông 1 - Lắng nghe - Kết nối - Đồng hành - Cổng thông tin và tương tác cử tri" class="hero-banner-img">
-  </section>
+<div class="maintenance-card">
+  <img class="emblem" src="images/quoc-huy-v2.png" alt="Quốc huy">
+  <div class="org-name">Hội đồng Nhân dân xã Đam Rông 1</div>
+  <div class="slogan">Lắng nghe - Kết nối - Đồng hành</div>
 
-  <!-- SLIDER HOẠT ĐỘNG (ngay sau banner) -->
-  <section class="section" id="slider-section">
-    <div class="container">
-      <h2 class="section-title"><i class="fa-solid fa-images"></i> Hoạt động nổi bật của địa phương</h2>
-      <div class="slider-wrap" id="home-slider">
-        <div class="slider-track" id="slider-track">
-          <!-- slides được render bằng JS -->
-        </div>
-        <button class="slider-btn prev" id="slider-prev" aria-label="Trước"><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="slider-btn next" id="slider-next" aria-label="Tiếp"><i class="fa-solid fa-chevron-right"></i></button>
-        <div class="slider-dots" id="slider-dots"></div>
-      </div>
-    </div>
-  </section>
+  <div class="icon-gear"><i class="fa-solid fa-gear"></i></div>
 
-  <!-- 4 NÚT BẤM NHANH (sau slider) -->
-  <section class="hero-actions-section">
-    <div class="action-grid">
-      <a href="gui-kien-nghi.html" class="action-card card-red">
-        <span class="icon-circle"><i class="fa-solid fa-pen-to-square"></i></span>
-        <span class="txt">
-          <h3>Gửi kiến nghị</h3>
-          <p>Gửi ý kiến, kiến nghị đến HĐND xã</p>
-        </span>
-        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-      </a>
-      <a href="tra-cuu.html" class="action-card card-green">
-        <span class="icon-circle"><i class="fa-solid fa-magnifying-glass"></i></span>
-        <span class="txt">
-          <h3>Tra cứu kiến nghị</h3>
-          <p>Theo dõi tiến độ xử lý bằng mã tra cứu</p>
-        </span>
-        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-      </a>
-      <a href="van-ban.html" class="action-card card-orange">
-        <span class="icon-circle"><i class="fa-solid fa-file-lines"></i></span>
-        <span class="txt">
-          <h3>Tra cứu văn bản</h3>
-          <p>Nghị quyết, báo cáo, kế hoạch, chỉ đạo</p>
-        </span>
-        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-      </a>
-      <a href="hoat-dong.html" class="action-card card-blue">
-        <span class="icon-circle"><i class="fa-solid fa-calendar-days"></i></span>
-        <span class="txt">
-          <h3>Lịch hoạt động / Tin tức</h3>
-          <p>Lịch kỳ họp, giám sát, tiếp xúc cử tri</p>
-        </span>
-        <span class="arrow"><i class="fa-solid fa-chevron-right"></i></span>
-      </a>
-    </div>
-  </section>
+  <h1>Trang web đang được bảo trì</h1>
+  <p class="lead">
+    Cổng thông tin và tương tác cử tri của HĐND xã Đam Rông 1 hiện đang được nâng cấp
+    để phục vụ bà con tốt hơn. Chúng tôi sẽ sớm hoạt động trở lại.
+    Rất mong bà con và cử tri thông cảm vì sự bất tiện này.
+  </p>
+
+  <div class="status-pill"><span class="dot"></span> Đang tiến hành bảo trì hệ thống</div>
+
+  <div class="divider"></div>
+
+  <div class="contact-box">
+    <div class="row"><i class="fa-solid fa-location-dot"></i> Xã Đam Rông 1, tỉnh Lâm Đồng</div>
+    <div class="row"><i class="fa-solid fa-phone"></i> 0365 008 008</div>
+    <div class="row"><i class="fa-solid fa-envelope"></i> hdnddamrong1@lamdong.gov.vn</div>
+  </div>
 </div>
 
-<!-- VĂN BẢN MỚI & CỬ TRI HỎI - HĐND TRẢ LỜI -->
-<section class="section" style="padding-top:0;">
-  <div class="container">
-    <div class="two-col">
-      <div class="panel">
-        <div class="panel-head">
-          <i class="fa-solid fa-file-lines"></i>
-          <h3>VĂN BẢN MỚI</h3>
-          <a href="van-ban.html" class="see-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-        <div class="panel-body" id="home-docs-list">
-          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div>
-        </div>
-      </div>
+<footer class="mt-footer">DÂN CHỦ - TRÁCH NHIỆM - HIỆU QUẢ - VÌ NHÂN DÂN</footer>
 
-      <div class="panel">
-        <div class="panel-head">
-          <i class="fa-solid fa-comments"></i>
-          <h3>CỬ TRI HỎI – HĐND TRẢ LỜI</h3>
-          <a href="tra-cuu.html" class="see-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-        <div class="panel-body" id="home-qa-list">
-          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Đang tải...</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- QR THEO THÔN -->
-<section class="section" style="padding-top:0;">
-  <div class="container">
-    <h2 class="section-title"><i class="fa-solid fa-qrcode"></i> Mã QR theo thôn</h2>
-    <div class="qr-banner">
-      <div class="qr-icon"><i class="fa-solid fa-qrcode"></i></div>
-      <div class="txt">
-        <h4>Danh sách mã QR các thôn</h4>
-        <p>Tham gia gửi kiến nghị nhanh chóng, thuận tiện ngay tại thôn của bạn.</p>
-      </div>
-      <a href="qr-thon.html" class="btn-primary-red">Xem danh sách QR <i class="fa-solid fa-arrow-right"></i></a>
-    </div>
-  </div>
-</section>
-
-<footer id="site-footer"></footer>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="js/supabase-config.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/common.js"></script>
-<script src="js/index-page.js"></script>
 </body>
 </html>
