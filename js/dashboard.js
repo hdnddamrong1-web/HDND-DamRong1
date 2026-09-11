@@ -34,6 +34,13 @@ async function bootDashboard() {
   document.getElementById('btn-export-excel').addEventListener('click', exportYkienExcel);
   document.getElementById('btn-export-word').addEventListener('click', exportYkienWord);
 
+  document.getElementById('btn-add-daibieu-account').addEventListener('click', () => {
+    document.getElementById('db-account-error').classList.remove('show');
+    document.getElementById('form-daibieu-account').reset();
+    document.getElementById('modal-daibieu-account').classList.add('open');
+  });
+  document.getElementById('form-daibieu-account').addEventListener('submit', submitDaiBieuAccountForm);
+
   bindModalClose('modal-kn', 'modal-kn-close');
   bindModalClose('modal-vb', 'modal-vb-close');
   bindModalClose('modal-tt', 'modal-tt-close');
@@ -41,6 +48,7 @@ async function bootDashboard() {
   bindModalClose('modal-dt', 'modal-dt-close');
   bindModalClose('modal-ykien-list', 'modal-ykien-list-close');
   bindModalClose('modal-banhanh', 'modal-banhanh-close');
+  bindModalClose('modal-daibieu-account', 'modal-daibieu-account-close');
 }
 
 /* ---------- Header thông tin admin ---------- */
@@ -64,7 +72,7 @@ function switchTab(tabName) {
     'van-ban': 'Quản lý văn bản',
     'tin-tuc': 'Quản lý tin tức / hoạt động',
     'lich': 'Quản lý lịch hoạt động',
-    'dai-bieu': 'Dự thảo & Ý kiến đại biểu'
+    'dai-bieu': 'Đại biểu HĐND xã'
   };
   document.getElementById('page-title').textContent = titles[tabName] || 'Dashboard';
   document.getElementById('admin-sidebar').classList.remove('open');
@@ -74,7 +82,7 @@ function switchTab(tabName) {
   if (tabName === 'van-ban') loadVanBanTable();
   if (tabName === 'tin-tuc') loadTinTucTable();
   if (tabName === 'lich') loadLichTable();
-  if (tabName === 'dai-bieu') loadDtTable();
+  if (tabName === 'dai-bieu') { loadDtTable(); loadDbAccountTable(); }
 }
 
 function initTabNav() {
@@ -650,6 +658,111 @@ async function submitLhdForm(e) {
   } catch (e) {
     console.error(e);
     alert('Có lỗi khi lưu hoạt động.');
+  }
+}
+
+/* ---------- TÀI KHOẢN ĐẠI BIỂU HĐND (đăng nhập bằng CCCD / mật khẩu = SĐT) ----------
+   Vì Supabase Auth chỉ đăng nhập bằng email, mỗi tài khoản đại biểu được tạo với 1
+   email NỘI BỘ tự sinh dạng "db.<CCCD>@hdnddamrong1.local" - đại biểu không cần biết
+   email này, họ chỉ cần nhớ CCCD (tên đăng nhập) + SĐT (mật khẩu mặc định).
+   Bảng "dai_bieu_accounts" chỉ dùng để Admin xem/tra soát danh sách CCCD đã cấp
+   (KHÔNG lưu mật khẩu) - dữ liệu đăng nhập thật vẫn nằm ở Supabase Auth. */
+let cachedDbAccounts = [];
+const DAI_BIEU_EMAIL_DOMAIN = 'hdnddamrong1.local';
+
+function cccdToInternalEmail(cccd) {
+  return `db.${cccd.trim()}@${DAI_BIEU_EMAIL_DOMAIN}`;
+}
+
+async function loadDbAccountTable() {
+  const tbody = document.getElementById('db-account-table-body');
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i></td></tr>`;
+  try {
+    cachedDbAccounts = await fetchAll('dai_bieu_accounts', { sort: '-created_at' });
+    renderDbAccountTable();
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="5">Lỗi tải danh sách (có thể chưa tạo bảng "dai_bieu_accounts" trên Supabase).</td></tr>`;
+  }
+}
+
+function renderDbAccountTable() {
+  const tbody = document.getElementById('db-account-table-body');
+  if (cachedDbAccounts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:#a89474;">Chưa cấp tài khoản đại biểu nào</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cachedDbAccounts
+    .map(
+      (a) => `
+      <tr>
+        <td>${escapeHtml(a.ho_ten)}</td>
+        <td><b>${escapeHtml(a.cccd)}</b></td>
+        <td>${escapeHtml(a.so_dien_thoai)}</td>
+        <td>${a.da_doi_mat_khau ? '<span class="status-pill status-done">Đã đổi</span>' : '<span class="status-pill status-received">Chưa đổi (đang dùng mật khẩu mặc định)</span>'}</td>
+        <td><button class="icon-btn" onclick="deleteRecord('dai_bieu_accounts','${a.id}', loadDbAccountTable)" title="Xoá khỏi danh sách theo dõi (KHÔNG xoá tài khoản đăng nhập trên Supabase Auth)"><i class="fa-solid fa-trash"></i></button></td>
+      </tr>`
+    )
+    .join('');
+}
+
+async function submitDaiBieuAccountForm(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('db-account-error');
+  errEl.classList.remove('show');
+  const hoTen = document.getElementById('db-hoten').value.trim();
+  const cccd = document.getElementById('db-cccd').value.trim();
+  const sdt = document.getElementById('db-sdt').value.trim();
+  if (!hoTen || !cccd || !sdt) return;
+
+  const btn = document.getElementById('db-account-submit-btn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang cấp tài khoản...';
+
+  try {
+    const internalEmail = cccdToInternalEmail(cccd);
+    // Dùng client PHỤ (không lưu session) để KHÔNG làm mất session đăng nhập hiện tại của Admin.
+    const { error: signUpError } = await supabaseCreateAccountClient.auth.signUp({
+      email: internalEmail,
+      password: sdt,
+      options: {
+        data: {
+          ho_ten: hoTen,
+          vai_tro: 'Đại biểu',
+          cccd: cccd,
+          phai_doi_mk: true // ép đại biểu đổi mật khẩu ngay khi đăng nhập lần đầu
+        }
+      }
+    });
+    if (signUpError) {
+      if (/already registered|already exists/i.test(signUpError.message || '')) {
+        throw new Error('Số CCCD này đã được cấp tài khoản trước đó. Vui lòng kiểm tra lại danh sách.');
+      }
+      throw signUpError;
+    }
+
+    // Lưu vào bảng theo dõi để Admin tra soát danh sách CCCD đã cấp (không lưu mật khẩu).
+    const { error: insertError } = await supabaseClient.from('dai_bieu_accounts').insert({
+      ho_ten: hoTen,
+      cccd: cccd,
+      so_dien_thoai: sdt,
+      email_noi_bo: internalEmail,
+      da_doi_mat_khau: false
+    });
+    if (insertError) throw insertError;
+
+    document.getElementById('modal-daibieu-account').classList.remove('open');
+    document.getElementById('form-daibieu-account').reset();
+    alert(`Đã cấp tài khoản cho đại biểu "${hoTen}".\nTên đăng nhập: ${cccd}\nMật khẩu mặc định: ${sdt}\n\nVui lòng thông báo lại thông tin này cho đại biểu.`);
+    loadDbAccountTable();
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = e.message || 'Có lỗi khi cấp tài khoản. Vui lòng thử lại.';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
   }
 }
 
