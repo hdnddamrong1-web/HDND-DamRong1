@@ -32,6 +32,19 @@ function renderDocList(docs) {
             ? `<a href="${escapeHtml(d.file_url)}" target="_blank" rel="noopener" class="btn btn-outline" style="margin-top:10px;display:inline-flex;"><i class="fa-solid fa-file-arrow-down"></i> Xem / Tải văn bản</a>`
             : ''
         }
+        ${
+          Array.isArray(d.phu_luc) && d.phu_luc.length
+            ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:13px;font-weight:700;color:var(--red-800);"><i class="fa-solid fa-paperclip"></i> Phụ lục / văn bản kèm theo:</span>
+                ${d.phu_luc
+                  .map(
+                    (p) =>
+                      `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" style="color:var(--red-700);font-weight:600;font-size:13.5px;"><i class="fa-solid fa-file-arrow-down"></i> ${escapeHtml(p.ten || 'Phụ lục')}</a>`
+                  )
+                  .join('')}
+              </div>`
+            : ''
+        }
       </div>
     </div>`
     )
