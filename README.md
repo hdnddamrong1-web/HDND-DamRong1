@@ -49,6 +49,22 @@ riêng `dai-bieu.html` để xem văn bản dự thảo và gửi ý kiến đó
 - **Gửi ý kiến đóng góp**: mỗi văn bản dự thảo có 1 khung nhập liệu (modal) để đại biểu gửi ý kiến (bảng `y_kien_dong_gop`). Trong thời hạn góp ý, đại biểu có thể **tự chỉnh sửa lại ý kiến của chính mình** bất kỳ lúc nào (bấm lại nút để mở modal, nội dung cũ tự hiện sẵn, sửa rồi gửi lại là ghi đè lên ý kiến trước, không tạo bản ghi trùng).
 - **Tự động khoá khi hết hạn / khoá tay**: mỗi văn bản dự thảo có trường `han_gop_y` (hạn góp ý) và `khoa_gop_y` (cờ khoá tay). Khi đã quá `han_gop_y` HOẶC Admin bật `khoa_gop_y = true`, trang tự nhận biết (hàm `isDraftLocked()`) và: ẩn nút gửi/sửa, textarea chuyển `disabled`, đại biểu chỉ xem lại được ý kiến cũ của mình, không gửi/sửa thêm được.
 
+### 🆕 1.4a. Cấp tài khoản Đại biểu bằng CCCD + SĐT (ngay trong Dashboard, không cần vào Supabase)
+- Trong tab **"Đại biểu HĐND xã"** của Dashboard, có khu vực **"Tài khoản Đại biểu HĐND"** ở trên cùng, với nút **"Cấp tài khoản mới"**.
+- Form cấp tài khoản **chỉ bắt buộc nhập 2 trường: Số CCCD và Số điện thoại** (không bắt buộc Email, vì đại biểu không cần dùng email để đăng nhập).
+- **Quy tắc đăng nhập dành cho Đại biểu** (để người lớn tuổi dễ nhớ):
+  - **Tên đăng nhập = Số CCCD**
+  - **Mật khẩu mặc định = Số điện thoại**
+- Vì Supabase Auth chỉ hỗ trợ đăng nhập bằng email (không có khái niệm "username"), hệ thống **tự sinh 1 email nội bộ** dạng `db.<CCCD>@hdnddamrong1.local` phía sau — đại biểu **không cần biết và không nhìn thấy** email này, họ chỉ cần nhớ CCCD + SĐT. Ở màn hình đăng nhập (`login.html`), nếu ô "tên đăng nhập" không chứa dấu `@` thì hệ thống tự hiểu đó là số CCCD và tự chuyển đổi trước khi gửi lên Supabase.
+- Khi bấm "Cấp tài khoản": hệ thống gọi `supabaseCreateAccountClient.auth.signUp()` (dùng 1 Supabase client PHỤ, tách biệt, không lưu session — để không làm mất session đăng nhập hiện tại của Admin), tạo tài khoản Supabase Auth mới với `user_metadata = { ho_ten, vai_tro: "Đại biểu", cccd, phai_doi_mk: true }`, đồng thời lưu 1 dòng theo dõi vào bảng `dai_bieu_accounts` (chỉ để Admin tra soát danh sách CCCD đã cấp — **không lưu mật khẩu** ở bảng này, mật khẩu thật chỉ nằm trong Supabase Auth).
+- ⚠️ **Yêu cầu bắt buộc trên Supabase để chức năng này hoạt động**: phải **bật lại "Allow new user signups"** và **tắt "Confirm email"** trong Authentication → Settings (xem hướng dẫn & cảnh báo an toàn ở mục 3).
+
+### 🆕 1.4b. Ép đổi mật khẩu ngay lần đăng nhập đầu tiên (bảo mật)
+- Tài khoản đại biểu mới cấp có cờ `user_metadata.phai_doi_mk = true`.
+- Khi đăng nhập thành công lần đầu bằng mật khẩu mặc định (số điện thoại), `login.html` kiểm tra cờ này (`mustChangePassword()` trong `js/auth.js`) và **hiện modal ép đổi mật khẩu** — đại biểu phải nhập mật khẩu mới (≥ 6 ký tự) và xác nhận lại, rồi mới được vào `dai-bieu.html`. Không thể bấm tắt/bỏ qua modal này.
+- Sau khi đổi mật khẩu thành công (`changeOwnPassword()` gọi `supabaseClient.auth.updateUser()`), cờ `phai_doi_mk` tự chuyển về `false` và không hiện lại modal này ở các lần đăng nhập sau.
+- **Chặn cả việc gõ thẳng URL để bỏ qua bước đổi mật khẩu**: `guardRepresentativePage()` (dùng cho `dai-bieu.html`) kiểm tra lại `mustChangePassword()` — nếu vẫn còn `true` (chưa đổi mật khẩu), sẽ tự đưa về `login.html` để bắt đổi trước, không cho vào thẳng trang Đại biểu bằng cách gõ URL trực tiếp.
+
 ### 🆕 1.4. Dashboard Admin — tab mới "Dự thảo & Đại biểu"
 - **Chỉ Cán bộ/Admin thấy tab này** (Đại biểu đăng nhập vào `dashboard.html` sẽ bị tự chuyển hướng ra `dai-bieu.html`, không thấy được tab quản trị nào).
 - **Quản lý văn bản dự thảo**: thêm/sửa/xoá qua modal — tiêu đề, mô tả, file dự thảo (upload PDF/Word lên Supabase Storage hoặc dán URL), đặt hạn góp ý (`datetime-local`).
@@ -118,6 +134,7 @@ Toàn bộ dữ liệu đọc/ghi qua **Supabase JS SDK** (`supabaseClient` kh�
 | `thon` | Danh sách 9 thôn thật (dùng cho form & QR) | `ten_thon, ma_thon` |
 | 🆕 `van_ban_du_thao` | Văn bản dự thảo để đại biểu góp ý (chưa công khai) | `tieu_de, mo_ta, file_url, han_gop_y, khoa_gop_y, da_ban_hanh, van_ban_chinh_thuc_id` |
 | 🆕 `y_kien_dong_gop` | Ý kiến đóng góp của từng đại biểu cho 1 văn bản dự thảo | `van_ban_du_thao_id, dai_bieu_email, dai_bieu_ten, noi_dung, ngay_gui, ngay_sua` |
+| 🆕 `dai_bieu_accounts` | Danh sách CCCD/SĐT đã cấp cho đại biểu (chỉ để Admin tra soát — **không lưu mật khẩu thật**, mật khẩu thật nằm ở Supabase Auth) | `ho_ten, cccd, so_dien_thoai, email_noi_bo, da_doi_mat_khau` |
 
 Tài khoản đăng nhập admin/đại biểu **không còn là 1 bảng dữ liệu** — quản lý hoàn toàn qua
 **Supabase Authentication** (Authentication → Users trong Supabase Dashboard), phân biệt vai trò
@@ -156,7 +173,28 @@ qua `user_metadata.vai_tro` (`Quản trị viên` / `Cán bộ` / `Đại biểu
 >   for all to authenticated using (true) with check (true);
 > create policy "authenticated full access" on y_kien_dong_gop
 >   for all to authenticated using (true) with check (true);
+>
+> -- Bảng theo dõi CCCD/SĐT đã cấp cho đại biểu (KHÔNG lưu mật khẩu thật ở đây)
+> create table if not exists dai_bieu_accounts (
+>   id uuid primary key default gen_random_uuid(),
+>   ho_ten text,
+>   cccd text,
+>   so_dien_thoai text,
+>   email_noi_bo text,
+>   da_doi_mat_khau boolean default false,
+>   created_at timestamptz default now()
+> );
+> alter table dai_bieu_accounts enable row level security;
+> create policy "authenticated full access" on dai_bieu_accounts
+>   for all to authenticated using (true) with check (true);
 > ```
+
+### 🆕 Cấu hình BẮT BUỘC trên Supabase để "Cấp tài khoản Đại biểu bằng CCCD/SĐT" hoạt động
+Vì tính năng này để Admin **tạo tài khoản Supabase Auth mới ngay từ trình duyệt** (không có server riêng để giữ khoá bí mật), nó dùng `auth.signUp()` bằng khoá công khai (anon key) — cách duy nhất khả thi với 1 website tĩnh. Cần vào **Supabase Dashboard → Authentication → Sign In / Providers** (hoặc **Settings**, tuỳ phiên bản UI) và:
+1. **Bật lại "Allow new user signups"** (đang tắt theo cấu hình trước đây — phải mở lại thì `signUp()` mới tạo được tài khoản).
+2. **Tắt "Confirm email"** (Email confirmation) — vì tài khoản đại biểu dùng email nội bộ giả (`db.<CCCD>@hdnddamrong1.local`), không có hộp thư thật để nhận email xác nhận.
+
+> ⚠️ **Đánh đổi về an toàn cần biết rõ**: khi "Allow new user signups" đang mở, về lý thuyết bất kỳ ai có anon key (khoá này luôn công khai trong code phía trình duyệt, không phải bí mật) đều có thể tự gọi `auth.signUp()` trực tiếp để tạo 1 tài khoản Supabase Auth "chui" — không chỉ qua nút bấm trong Dashboard. Để chặn rủi ro này, hệ thống đã **siết ở tầng ứng dụng**: tài khoản mới tạo theo cách "chui" (không có `vai_tro` hợp lệ do Admin đặt) sẽ **không lọt qua được `guardStaffPage()` lẫn `guardRepresentativePage()`** — tức là dù tạo được tài khoản, họ vẫn không vào được `dashboard.html` hay `dai-bieu.html`. Tuy nhiên đây vẫn là điều đánh đổi thật (không phải không có rủi ro) — nếu muốn chặn triệt để hơn ở tầng Supabase, cần chuyển việc tạo tài khoản sang 1 Cloud Function/Edge Function riêng dùng `service_role` key (ngoài khả năng của agent này, cần bạn hoặc 1 dev backend triển khai thêm).
 
 ### Hàm phía server (RPC) chạy trên Supabase
 - `generate_ma_tra_cuu()` – sinh mã tra cứu tuần tự dạng `DR1-{năm}-{số thứ tự}`, tránh trùng mã.
@@ -175,6 +213,8 @@ qua `user_metadata.vai_tro` (`Quản trị viên` / `Cán bộ` / `Đại biểu
 - Chưa phân quyền chi tiết giữa "Quản trị viên" và "Cán bộ" (mọi tài khoản Supabase Auth có vai_tro khác "Đại biểu" hiện có toàn quyền dashboard).
 - 🆕 **Phân biệt vai trò "Cán bộ" / "Đại biểu" hiện ở tầng giao diện (route theo `user_metadata.vai_tro`), CHƯA ở tầng RLS** — về mặt dữ liệu thật, 1 tài khoản đại biểu nếu gọi trực tiếp Supabase API vẫn có thể đọc/sửa bất kỳ bảng nào (vì RLS hiện cấp quyền `authenticated` = toàn quyền). Muốn chặn thật cần viết thêm RLS riêng cho `van_ban_du_thao`/`y_kien_dong_gop` dựa theo vai trò và/hoặc email trong JWT (xem gợi ý ở mục 5).
 - Chưa có cơ chế chặn 1 đại biểu sửa ý kiến của đại biểu khác ở tầng dữ liệu (giao diện hiện chỉ cho sửa ý kiến có `dai_bieu_email` khớp với email đang đăng nhập, nhưng nếu gọi API trực tiếp vẫn có thể sửa được bản ghi của người khác).
+- 🆕 **Cấp tài khoản Đại biểu bằng CCCD/SĐT yêu cầu bật "Allow new user signups" trên Supabase** — về lý thuyết ai có anon key (luôn công khai) đều gọi được `auth.signUp()` trực tiếp để tạo tài khoản "chui", dù tài khoản đó vẫn bị chặn ở `guardStaffPage()`/`guardRepresentativePage()` vì không có `vai_tro` hợp lệ. Xem giải thích đầy đủ ở mục 3.
+- 🆕 Bảng `dai_bieu_accounts` chỉ để Admin tra soát danh sách CCCD/SĐT đã cấp — xoá 1 dòng trong bảng này (nút thùng rác) **không xoá tài khoản đăng nhập thật trên Supabase Auth**; muốn khoá/xoá tài khoản đăng nhập thật phải vào Supabase Dashboard → Authentication → Users để xoá tay.
 - Tin tức chưa có trang chi tiết riêng (dùng modal xem toàn bộ nội dung ngay trên trang danh sách, không có URL riêng cho từng bài để chia sẻ).
 - Trường hiển thị tên/vai trò cán bộ trên header (`ho_ten`, `vai_tro`) lấy từ `user_metadata` của tài khoản Supabase Auth — nếu chưa được set khi tạo tài khoản, hệ thống sẽ hiển thị email và vai trò mặc định "Cán bộ".
 - Website hiện đang chạy ở 2 nơi tách biệt (dữ liệu KHÔNG đồng bộ giữa 2 nơi):
@@ -189,9 +229,11 @@ qua `user_metadata.vai_tro` (`Quản trị viên` / `Cán bộ` / `Đại biểu
 4. Thêm thông báo email/Zalo OA khi kiến nghị được trả lời.
 5. Cân nhắc dừng/không tiếp tục cập nhật bản Hosted Deploy cũ trên nền tảng GenSpark (dùng Table API) sau khi bản Vercel + Supabase đã hoạt động ổn định, để tránh 2 nguồn dữ liệu song song gây nhầm lẫn.
 6. (Tuỳ chọn) Làm trang chi tiết riêng cho từng bài tin tức (URL dạng `tin-tuc-chi-tiet.html?id=...`) nếu cần chia sẻ link bài viết cụ thể — hiện tại xem chi tiết qua modal ngay trên trang danh sách.
-7. 🆕 Tạo 2 bảng `van_ban_du_thao` và `y_kien_dong_gop` trên Supabase (SQL mẫu ở mục 3) — **bắt buộc phải làm trước** thì tính năng Đại biểu mới hoạt động được (hiện tại code đã viết sẵn ở `js/dai-bieu.js` và `js/dashboard.js` nhưng sẽ báo lỗi "không tải được dữ liệu" nếu chưa có bảng).
-8. 🆕 Tạo tài khoản Supabase Auth cho từng đại biểu (Authentication → Users → Add user), nhớ set `user_metadata` với `"vai_tro": "Đại biểu"` và `"ho_ten": "..."` để họ đăng nhập vào đúng khu vực `dai-bieu.html`.
-9. 🆕 (Nâng cao, nếu cần bảo mật chặt hơn) Viết RLS chi tiết cho `y_kien_dong_gop` để đại biểu chỉ `UPDATE` được bản ghi có `dai_bieu_email = auth.jwt() ->> 'email'` của chính họ, thay vì dựa hoàn toàn vào logic kiểm tra ở giao diện.
+7. 🆕 Tạo 3 bảng `van_ban_du_thao`, `y_kien_dong_gop` và `dai_bieu_accounts` trên Supabase (SQL mẫu ở mục 3) — **bắt buộc phải làm trước** thì tính năng Đại biểu mới hoạt động được (hiện tại code đã viết sẵn ở `js/dai-bieu.js` và `js/dashboard.js` nhưng sẽ báo lỗi "không tải được dữ liệu" nếu chưa có bảng).
+8. 🆕 Cách 1 (thủ công, không cần bật signup): Tạo tài khoản Supabase Auth cho từng đại biểu (Authentication → Users → Add user), nhớ set `user_metadata` với `"vai_tro": "Đại biểu"` và `"ho_ten": "..."` để họ đăng nhập vào đúng khu vực `dai-bieu.html`.
+9. 🆕 Cách 2 (khuyến nghị, dùng ngay trong Dashboard): Bật "Allow new user signups" + tắt "Confirm email" trên Supabase (xem mục 3), sau đó dùng nút **"Cấp tài khoản mới"** trong tab "Đại biểu HĐND xã" của Dashboard — chỉ cần nhập Họ tên + CCCD + SĐT, hệ thống tự tạo tài khoản đăng nhập bằng CCCD/SĐT và tự ép đổi mật khẩu lần đầu.
+10. 🆕 (Nâng cao, nếu cần bảo mật chặt hơn) Viết RLS chi tiết cho `y_kien_dong_gop` để đại biểu chỉ `UPDATE` được bản ghi có `dai_bieu_email = auth.jwt() ->> 'email'` của chính họ, thay vì dựa hoàn toàn vào logic kiểm tra ở giao diện.
+11. 🆕 (Nâng cao, nếu cần chặn triệt để việc tự tạo tài khoản "chui" qua anon key) Chuyển việc tạo tài khoản đại biểu sang 1 Supabase Edge Function dùng `service_role` key, thay cho việc gọi `auth.signUp()` trực tiếp từ trình duyệt như hiện tại — cần 1 dev backend hỗ trợ thêm vì vượt ngoài khả năng của 1 website tĩnh thuần.
 
 ## 6. Công nghệ sử dụng
 
