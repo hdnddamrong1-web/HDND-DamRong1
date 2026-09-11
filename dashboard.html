@@ -135,6 +135,26 @@
 
     <!-- TAB: DỰ THẢO & ĐẠI BIỂU -->
     <section class="tab-panel" id="tab-dai-bieu" style="display:none;">
+
+      <!-- KHU VỰC: QUẢN LÝ TÀI KHOẢN ĐẠI BIỂU -->
+      <div class="panel" style="margin-bottom:24px;padding:20px;">
+        <div class="admin-topbar" style="margin-bottom:6px;">
+          <h3 style="margin:0;color:var(--red-800);"><i class="fa-solid fa-id-card"></i> Tài khoản Đại biểu HĐND</h3>
+          <button class="btn-primary-red" id="btn-add-daibieu-account"><i class="fa-solid fa-user-plus"></i> Cấp tài khoản mới</button>
+        </div>
+        <p class="helper-text" style="margin-bottom:14px;">
+          Tên đăng nhập = <b>Số CCCD</b>, mật khẩu mặc định = <b>Số điện thoại</b> (để đại biểu dễ nhớ).
+          Sau khi đăng nhập lần đầu bằng số điện thoại, hệ thống sẽ <b>bắt buộc</b> đại biểu đổi sang mật khẩu mới trước khi dùng tiếp.
+        </p>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Họ tên</th><th>Số CCCD (đăng nhập)</th><th>Số điện thoại</th><th>Đã đổi mật khẩu</th><th>Hành động</th></tr></thead>
+            <tbody id="db-account-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- KHU VỰC: VĂN BẢN DỰ THẢO & Ý KIẾN -->
       <div class="admin-topbar" style="margin-bottom:14px;">
         <div></div>
         <button class="btn-primary-red" id="btn-add-dt"><i class="fa-solid fa-plus"></i> Thêm văn bản dự thảo</button>
@@ -250,6 +270,34 @@
       <div class="form-group"><label>Địa điểm</label><input type="text" class="form-control" id="lhd-diadiem"></div>
       <div class="form-group"><label>Nội dung chi tiết</label><textarea class="form-control" id="lhd-noidung"></textarea></div>
       <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Lưu hoạt động</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Cấp tài khoản mới cho Đại biểu -->
+<div class="modal-overlay" id="modal-daibieu-account">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-daibieu-account-close">&times;</button>
+    <h3><i class="fa-solid fa-user-plus"></i> Cấp tài khoản Đại biểu HĐND</h3>
+    <div class="alert alert-error" id="db-account-error"></div>
+    <form id="form-daibieu-account">
+      <div class="form-group"><label>Họ và tên đại biểu *</label><input type="text" class="form-control" id="db-hoten" required placeholder="Nguyễn Văn A"></div>
+      <div class="form-row2">
+        <div class="form-group">
+          <label>Số CCCD * <span class="req">(dùng làm tên đăng nhập)</span></label>
+          <input type="text" class="form-control" id="db-cccd" required placeholder="0123456789" pattern="[0-9]{9,12}" title="Nhập đúng số CCCD (9-12 số)">
+        </div>
+        <div class="form-group">
+          <label>Số điện thoại * <span class="req">(dùng làm mật khẩu mặc định)</span></label>
+          <input type="text" class="form-control" id="db-sdt" required placeholder="0912345678" pattern="[0-9]{9,11}" title="Nhập đúng số điện thoại (9-11 số)">
+        </div>
+      </div>
+      <p class="helper-text" style="margin-bottom:14px;">
+        Đại biểu sẽ đăng nhập tại trang <b>login.html</b> bằng đúng <b>Số CCCD</b> (tên đăng nhập) và
+        <b>Số điện thoại</b> (mật khẩu). Ngay sau khi đăng nhập thành công lần đầu, hệ thống sẽ yêu cầu
+        đại biểu tự đặt lại mật khẩu mới trước khi được dùng tiếp.
+      </p>
+      <button type="submit" class="btn-submit" id="db-account-submit-btn"><i class="fa-solid fa-floppy-disk"></i> Cấp tài khoản</button>
     </form>
   </div>
 </div>
