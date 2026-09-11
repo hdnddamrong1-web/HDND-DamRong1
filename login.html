@@ -38,8 +38,8 @@
 
   <form id="login-form">
     <div class="form-group">
-      <label>Email <span class="req">*</span></label>
-      <input type="email" class="form-control" id="login-email" required placeholder="ten@email.com">
+      <label>Email (Cán bộ) hoặc Số CCCD (Đại biểu) <span class="req">*</span></label>
+      <input type="text" class="form-control" id="login-email" required placeholder="ten@email.com hoặc số CCCD">
     </div>
     <div class="form-group">
       <label>Mật khẩu <span class="req">*</span></label>
@@ -53,8 +53,32 @@
   <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
 
   <div class="note-box">
-    <i class="fa-solid fa-circle-info"></i> Trang đăng nhập dành riêng cho Cán bộ / Thường trực HĐND xã Đam Rông 1.
+    <i class="fa-solid fa-circle-info"></i> <b>Cán bộ / Thường trực:</b> đăng nhập bằng Email.<br>
+    <i class="fa-solid fa-circle-info"></i> <b>Đại biểu HĐND:</b> đăng nhập bằng <b>Số CCCD</b> (mật khẩu mặc định là Số điện thoại đã đăng ký).<br>
     Vui lòng liên hệ quản trị viên nếu bạn chưa có tài khoản hoặc quên mật khẩu.
+  </div>
+</div>
+
+<!-- MODAL: Ép đổi mật khẩu lần đầu (chỉ hiện cho Đại biểu đăng nhập bằng mật khẩu mặc định = SĐT) -->
+<div class="modal-overlay" id="modal-force-change-pw" style="z-index:3000;">
+  <div class="modal-box" style="max-width:420px;">
+    <h3><i class="fa-solid fa-lock"></i> Đổi mật khẩu lần đầu</h3>
+    <p class="helper-text" style="margin-bottom:14px;">
+      Đồng chí đang đăng nhập bằng <b>mật khẩu mặc định (số điện thoại)</b>. Vì lý do an toàn,
+      vui lòng đặt một mật khẩu mới trước khi tiếp tục sử dụng hệ thống.
+    </p>
+    <div class="alert alert-error" id="fpw-error"></div>
+    <form id="form-force-change-pw">
+      <div class="form-group">
+        <label>Mật khẩu mới * <span style="color:#8a7355;font-weight:400;">(ít nhất 6 ký tự)</span></label>
+        <input type="password" class="form-control" id="fpw-new" required minlength="6" placeholder="Nhập mật khẩu mới">
+      </div>
+      <div class="form-group">
+        <label>Nhập lại mật khẩu mới *</label>
+        <input type="password" class="form-control" id="fpw-confirm" required minlength="6" placeholder="Nhập lại mật khẩu mới">
+      </div>
+      <button type="submit" class="btn-submit" id="fpw-submit-btn"><i class="fa-solid fa-floppy-disk"></i> Lưu mật khẩu mới & Tiếp tục</button>
+    </form>
   </div>
 </div>
 
@@ -62,12 +86,33 @@
 <script src="js/supabase-config.js"></script>
 <script src="js/auth.js"></script>
 <script>
+  // Nếu người dùng nhập toàn số (không có "@") thì hiểu là Số CCCD của Đại biểu,
+  // tự chuyển thành email nội bộ "db.<CCCD>@hdnddamrong1.local" trước khi gửi Supabase.
+  function resolveLoginEmail(input) {
+    const v = input.trim();
+    if (v.includes('@')) return v; // đã là email (Cán bộ)
+    return `db.${v}@hdnddamrong1.local`; // là số CCCD (Đại biểu)
+  }
+
+  function goToLandingPage() {
+    window.location.href = isRepresentative() ? 'dai-bieu.html' : 'dashboard.html';
+  }
+
+  function afterLoginSuccess() {
+    if (mustChangePassword()) {
+      document.getElementById('modal-force-change-pw').classList.add('open');
+    } else {
+      goToLandingPage();
+    }
+  }
+
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('login-btn');
     const errEl = document.getElementById('login-error');
     errEl.classList.remove('show');
-    const email = document.getElementById('login-email').value;
+    const rawInput = document.getElementById('login-email').value;
+    const email = resolveLoginEmail(rawInput);
     const password = document.getElementById('login-password').value;
 
     btn.disabled = true;
@@ -76,7 +121,7 @@
     try {
       const result = await loginWithEmailPassword(email, password);
       if (result.ok) {
-        window.location.href = isRepresentative() ? 'dai-bieu.html' : 'dashboard.html';
+        afterLoginSuccess();
       } else {
         errEl.textContent = result.message;
         errEl.classList.add('show');
@@ -92,10 +137,50 @@
     }
   });
 
-  // Nếu đã đăng nhập rồi thì chuyển thẳng vào dashboard
+  // Form ép đổi mật khẩu lần đầu (chỉ đóng modal & cho qua khi đổi thành công)
+  document.getElementById('form-force-change-pw').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById('fpw-error');
+    errEl.classList.remove('show');
+    const pw1 = document.getElementById('fpw-new').value;
+    const pw2 = document.getElementById('fpw-confirm').value;
+    if (pw1 !== pw2) {
+      errEl.textContent = 'Hai mật khẩu nhập lại không khớp nhau.';
+      errEl.classList.add('show');
+      return;
+    }
+    if (pw1.length < 6) {
+      errEl.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự.';
+      errEl.classList.add('show');
+      return;
+    }
+    const btn = document.getElementById('fpw-submit-btn');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+    try {
+      const result = await changeOwnPassword(pw1);
+      if (result.ok) {
+        document.getElementById('modal-force-change-pw').classList.remove('open');
+        goToLandingPage();
+      } else {
+        errEl.textContent = result.message;
+        errEl.classList.add('show');
+      }
+    } catch (err) {
+      console.error(err);
+      errEl.textContent = 'Có lỗi xảy ra, vui lòng thử lại.';
+      errEl.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+
+  // Nếu đã đăng nhập rồi thì chuyển thẳng vào dashboard (hoặc ép đổi mật khẩu nếu chưa đổi)
   waitForAuth().then(() => {
     if (isLoggedIn()) {
-      window.location.href = isRepresentative() ? 'dai-bieu.html' : 'dashboard.html';
+      afterLoginSuccess();
     }
   });
 </script>
