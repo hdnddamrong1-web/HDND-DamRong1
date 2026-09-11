@@ -10,3 +10,10 @@ const SUPABASE_URL = 'https://ghmtmkjhuelcdwdiycmn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdobXRta2podWVsY2R3ZGl5Y21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5NjYxMzIsImV4cCI6MjEwMzU0MjEzMn0.vl3pIgdDTWqFLGn8R6PjoJ8yz1cr41mOyhyf67LrKoQ';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* Client PHỤ, hoàn toàn tách biệt (không lưu session, không tự refresh token),
+   CHỈ dùng để Admin "cấp tài khoản mới" cho Đại biểu bằng auth.signUp() ngay trong
+   Dashboard mà KHÔNG làm mất/đổi session đang đăng nhập của Admin trên client chính. */
+const supabaseCreateAccountClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false, storageKey: 'sb-temp-create-account' }
+});
