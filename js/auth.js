@@ -59,6 +59,31 @@ function isRepresentative() {
   return isLoggedIn() && getAdminRole() === 'Đại biểu';
 }
 
+/* Tài khoản Đại biểu do Admin cấp bằng CCCD (chưa đổi mật khẩu lần nào) sẽ có cờ
+   user_metadata.phai_doi_mk = true (đặt lúc tạo tài khoản, xoá đi sau khi đổi mật khẩu
+   thành công). Trang dai-bieu.html dùng cờ này để ép đổi mật khẩu trước khi dùng tiếp. */
+function mustChangePassword() {
+  if (!currentSession) return false;
+  const meta = currentSession.user.user_metadata || {};
+  return meta.phai_doi_mk === true;
+}
+
+/* Đổi mật khẩu cho tài khoản đang đăng nhập (dùng cho ép đổi mật khẩu lần đầu
+   của Đại biểu, và có thể dùng lại cho đổi mật khẩu thông thường). */
+async function changeOwnPassword(newPassword) {
+  if (!currentSession) return { ok: false, message: 'Chưa đăng nhập.' };
+  // Supabase merge user_metadata theo kiểu shallow-merge, nhưng để chắc chắn không
+  // mất ho_ten/vai_tro đang có, gộp tay lại rồi mới gửi lên.
+  const prevMeta = currentSession.user.user_metadata || {};
+  const { data, error } = await supabaseClient.auth.updateUser({
+    password: newPassword,
+    data: { ...prevMeta, phai_doi_mk: false }
+  });
+  if (error) return { ok: false, message: error.message || 'Đổi mật khẩu thất bại.' };
+  currentSession = { ...currentSession, user: data.user };
+  return { ok: true };
+}
+
 async function logout() {
   try {
     await supabaseClient.auth.signOut();
@@ -141,7 +166,9 @@ async function guardStaffPage() {
 }
 
 /* Bảo vệ trang Đại biểu: CHỈ tài khoản có vai_tro = 'Đại biểu' mới vào được.
-   Người dân chưa đăng nhập hoặc Cán bộ thường sẽ không truy cập được trang này. */
+   Người dân chưa đăng nhập hoặc Cán bộ thường sẽ không truy cập được trang này.
+   Nếu tài khoản còn đang dùng mật khẩu mặc định (chưa đổi mật khẩu lần đầu),
+   BẮT BUỘC quay lại login.html để đổi mật khẩu trước (chặn truy cập thẳng URL để bỏ qua bước này). */
 async function guardRepresentativePage() {
   await waitForAuth();
   if (!isLoggedIn()) {
@@ -150,6 +177,10 @@ async function guardRepresentativePage() {
   }
   if (!isRepresentative()) {
     window.location.href = 'index.html';
+    return false;
+  }
+  if (mustChangePassword()) {
+    window.location.href = 'login.html';
     return false;
   }
   return true;
