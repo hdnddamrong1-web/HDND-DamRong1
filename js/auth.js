@@ -75,12 +75,26 @@ async function changeOwnPassword(newPassword) {
   // Supabase merge user_metadata theo kiểu shallow-merge, nhưng để chắc chắn không
   // mất ho_ten/vai_tro đang có, gộp tay lại rồi mới gửi lên.
   const prevMeta = currentSession.user.user_metadata || {};
+  const wasRepresentative = prevMeta.vai_tro === 'Đại biểu';
+  const userEmail = currentSession.user.email;
   const { data, error } = await supabaseClient.auth.updateUser({
     password: newPassword,
     data: { ...prevMeta, phai_doi_mk: false }
   });
   if (error) return { ok: false, message: error.message || 'Đổi mật khẩu thất bại.' };
   currentSession = { ...currentSession, user: data.user };
+
+  // Đồng bộ trạng thái "đã đổi mật khẩu" sang bảng theo dõi dai_bieu_accounts
+  // (chỉ để Admin xem đúng trạng thái trên Dashboard) - không chặn luồng đăng nhập
+  // nếu bước này lỗi (ví dụ bảng chưa được tạo).
+  if (wasRepresentative && userEmail) {
+    try {
+      await supabaseClient.from('dai_bieu_accounts').update({ da_doi_mat_khau: true }).eq('email_noi_bo', userEmail);
+    } catch (e) {
+      console.error('Không đồng bộ được trạng thái đổi mật khẩu vào dai_bieu_accounts:', e);
+    }
+  }
+
   return { ok: true };
 }
 
