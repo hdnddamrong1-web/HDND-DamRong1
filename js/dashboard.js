@@ -17,6 +17,7 @@ async function bootDashboard() {
   document.getElementById('btn-add-vb').addEventListener('click', () => openVbModal(null));
   document.getElementById('form-vb').addEventListener('submit', submitVbForm);
   initVbFileUpload();
+  initVbPhuLucUpload();
 
   document.getElementById('btn-add-tt').addEventListener('click', () => openTtModal(null));
   document.getElementById('form-tt').addEventListener('submit', submitTtForm);
@@ -317,11 +318,67 @@ function renderVbFilePreview(url) {
     : '';
 }
 
+let cachedVbPhuLuc = [];
+
+function renderVbPhuLucPreview() {
+  const preview = document.getElementById('vb-phuluc-preview');
+  if (!preview) return;
+  preview.innerHTML = cachedVbPhuLuc
+    .map(
+      (p, idx) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--cream-200);border-radius:8px;padding:6px 10px;">
+      <i class="fa-solid fa-paperclip" style="color:var(--red-700);"></i>
+      <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" style="flex:1;color:var(--red-700);font-weight:600;text-decoration:none;">${escapeHtml(p.ten)}</a>
+      <button type="button" onclick="removeVbPhuLuc(${idx})" style="background:#b3261e;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:700;">&times;</button>
+    </div>`
+    )
+    .join('');
+}
+
+function removeVbPhuLuc(idx) {
+  cachedVbPhuLuc.splice(idx, 1);
+  renderVbPhuLucPreview();
+}
+
+function initVbPhuLucUpload() {
+  const uploadBtn = document.getElementById('vb-phuluc-upload-btn');
+  const fileInput = document.getElementById('vb-phuluc-input');
+  if (!uploadBtn || !fileInput) return;
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', async () => {
+    const files = Array.from(fileInput.files || []);
+    if (files.length === 0) return;
+    const originalHtml = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" quá lớn (giới hạn 10MB), đã bỏ qua.`);
+        continue;
+      }
+      uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ${file.name}...`;
+      try {
+        const url = await uploadToStorage(file, 'van-ban-phu-luc');
+        cachedVbPhuLuc.push({ ten: file.name, url });
+        renderVbPhuLucPreview();
+      } catch (e) {
+        console.error(e);
+        alert(`Có lỗi khi tải file "${file.name}" lên.`);
+      }
+    }
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = originalHtml;
+    fileInput.value = '';
+  });
+}
+
 function openVbModal(id) {
   document.getElementById('form-vb').reset();
   document.getElementById('modal-vb-title').innerHTML = id ? '<i class="fa-solid fa-file-lines"></i> Sửa văn bản' : '<i class="fa-solid fa-file-lines"></i> Thêm văn bản';
   document.getElementById('vb-id').value = id || '';
   renderVbFilePreview('');
+  cachedVbPhuLuc = [];
   if (id) {
     const d = cachedVanBan.find((x) => x.id === id);
     if (d) {
@@ -332,8 +389,10 @@ function openVbModal(id) {
       document.getElementById('vb-mota').value = d.mo_ta || '';
       document.getElementById('vb-file').value = d.file_url || '';
       renderVbFilePreview(d.file_url || '');
+      cachedVbPhuLuc = Array.isArray(d.phu_luc) ? [...d.phu_luc] : [];
     }
   }
+  renderVbPhuLucPreview();
   document.getElementById('modal-vb').classList.add('open');
 }
 
@@ -382,7 +441,8 @@ async function submitVbForm(e) {
     loai: document.getElementById('vb-loai').value,
     ngay_ban_hanh: new Date(document.getElementById('vb-ngay').value).toISOString(),
     mo_ta: document.getElementById('vb-mota').value.trim(),
-    file_url: document.getElementById('vb-file').value.trim()
+    file_url: document.getElementById('vb-file').value.trim(),
+    phu_luc: cachedVbPhuLuc
   };
   try {
     if (id) {
