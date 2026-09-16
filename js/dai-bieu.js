@@ -24,6 +24,14 @@ function formatDateTime(ts) {
   return `${hh}:${mi} ${dd}/${mm}/${yyyy}`;
 }
 
+/* Mở file trực tiếp để ĐỌC trong trình duyệt (không bị tải xuống máy) bằng cách
+   nhúng qua Google Docs Viewer - áp dụng được cho PDF/Word/Excel, và cũng giúp
+   xem được ngay trên các trình duyệt trong app (Zalo, Messenger...) vốn hay tự
+   động tải file thay vì hiển thị trực tiếp. */
+function buildViewerLink(fileUrl) {
+  return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+}
+
 /* Văn bản dự thảo bị khoá góp ý khi: quản trị viên khoá tay (khoa_gop_y),
    HOẶC đã quá hạn góp y (han_gop_y đã qua). */
 function isDraftLocked(d) {
@@ -78,11 +86,11 @@ function renderDraftList(list) {
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
           ${
             d.file_url
-              ? `<a href="${escapeHtml(d.file_url)}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-solid fa-file-arrow-down"></i> Xem / Tải file dự thảo</a>`
+              ? `<a href="${escapeHtml(buildViewerLink(d.file_url))}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-solid fa-eye"></i> Xem file dự thảo</a>`
               : ''
           }
           <button type="button" class="btn ${hasYkien ? 'btn-outline' : 'btn-gold'}" onclick="openYkienModal('${d.id}')">
-            <i class="fa-solid fa-comment-dots"></i> ${hasYkien ? (locked ? 'Xem ý kiến đã gửi' : 'Xem / Sửa ý kiến') : (locked ? 'Chưa gửi ý kiến (đã hết hạn)' : 'Gửi ý kiến đóng góp')}
+            <i class="fa-solid fa-comment-dots"></i> ${hasYkien ? (locked ? 'Xem ý kiến đã gửi' : 'Xem / Sửa ý kiến') : (locked ? `Chưa gửi ý kiến (${d.khoa_gop_y ? 'đã bị khoá' : 'đã hết hạn'})` : 'Gửi ý kiến đóng góp')}
           </button>
         </div>
       </div>`;
@@ -103,7 +111,7 @@ function openYkienModal(draftId) {
   if (locked) {
     submitBtn.style.display = 'none';
     document.getElementById('modal-ykien-title').innerHTML = '<i class="fa-solid fa-comment-dots"></i> Ý kiến đóng góp (đã khoá - chỉ xem)';
-    if (!d.myYkien) textarea.value = '(Đồng chí chưa gửi ý kiến trước khi hết hạn)';
+    if (!d.myYkien) textarea.value = d.khoa_gop_y ? '(Văn bản này đã bị quản trị viên khoá góp ý)' : '(Đồng chí chưa gửi ý kiến trước khi hết hạn)';
   } else {
     submitBtn.style.display = '';
     document.getElementById('modal-ykien-title').innerHTML = '<i class="fa-solid fa-comment-dots"></i> Chỉnh sửa ý kiến đóng góp';
