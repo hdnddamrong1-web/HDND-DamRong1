@@ -89,9 +89,7 @@ function renderDraftList(list) {
               ? `<a href="${escapeHtml(buildViewerLink(d.file_url))}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-solid fa-eye"></i> Xem file dự thảo</a>`
               : ''
           }
-          <button type="button" class="btn ${hasYkien ? 'btn-outline' : 'btn-gold'}" onclick="openYkienModal('${d.id}')">
-            <i class="fa-solid fa-comment-dots"></i> ${hasYkien ? (locked ? 'Xem ý kiến đã gửi' : 'Xem / Sửa ý kiến') : (locked ? `Chưa gửi ý kiến (${d.khoa_gop_y ? 'đã bị khoá' : 'đã hết hạn'})` : 'Gửi ý kiến đóng góp')}
-          </button>
+
         </div>
       </div>`;
     })
