@@ -73,6 +73,12 @@ function renderDraftList(list) {
         ? `<span class="status-pill" style="background:#fde3e3;color:#9c1c1c;"><i class="fa-solid fa-lock"></i> ${d.khoa_gop_y ? 'Đã khoá góp ý' : 'Đã hết hạn góp ý'}</span>`
         : `<span class="status-pill status-done"><i class="fa-solid fa-lock-open"></i> Còn thời hạn góp ý</span>`;
       const hasYkien = !!(d.myYkien && d.myYkien.noi_dung);
+      // Tính năng nhận ý kiến CHỈ dành cho văn bản còn ở dạng dự thảo:
+      // - Văn bản đã được đăng bản chính thức (da_ban_hanh) thì ẩn hoàn toàn mục ý kiến.
+      // - Nếu quản trị viên tích "Khoá góp ý ngay" (khoa_gop_y) và đại biểu CHƯA gửi ý kiến
+      //   nào trước đó thì cũng ẩn hoàn toàn (không hiện "Chưa gửi ý kiến (đã bị khoá)" nữa).
+      //   Nếu đại biểu đã gửi ý kiến rồi thì vẫn cho xem lại ý kiến đã gửi.
+      const showYkienButton = !d.da_ban_hanh && (hasYkien || !d.khoa_gop_y);
       return `
       <div class="doc-card" style="flex-direction:column;">
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
@@ -86,12 +92,16 @@ function renderDraftList(list) {
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
           ${
             d.file_url
-              ? `<a href="${escapeHtml(buildViewerLink(d.file_url))}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-solid fa-eye"></i> Xem file dự thảo</a>`
+              ? `<a href="${escapeHtml(buildViewerLink(d.file_url))}" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-solid fa-eye"></i> Xem văn bản</a>`
               : ''
           }
-          <button type="button" class="btn ${hasYkien ? 'btn-outline' : 'btn-gold'}" onclick="openYkienModal('${d.id}')">
-            <i class="fa-solid fa-comment-dots"></i> ${hasYkien ? (locked ? 'Xem ý kiến đã gửi' : 'Xem / Sửa ý kiến') : (locked ? `Chưa gửi ý kiến (${d.khoa_gop_y ? 'đã bị khoá' : 'đã hết hạn'})` : 'Gửi ý kiến đóng góp')}
-          </button>
+          ${
+            showYkienButton
+              ? `<button type="button" class="btn ${hasYkien ? 'btn-outline' : 'btn-gold'}" onclick="openYkienModal('${d.id}')">
+            <i class="fa-solid fa-comment-dots"></i> ${hasYkien ? (locked ? 'Xem ý kiến đã gửi' : 'Xem / Sửa ý kiến') : (locked ? 'Chưa gửi ý kiến (đã hết hạn)' : 'Gửi ý kiến đóng góp')}
+          </button>`
+              : ''
+          }
         </div>
       </div>`;
     })
