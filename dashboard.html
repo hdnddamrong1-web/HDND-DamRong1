@@ -327,7 +327,17 @@
           <button type="button" class="btn btn-outline" id="dt-upload-btn"><i class="fa-solid fa-upload"></i> Tải file lên</button>
           <input type="file" id="dt-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf" style="display:none;">
         </div>
+        <p class="helper-text">Đây là <b>văn bản dự thảo chính</b>.</p>
         <div id="dt-file-preview" style="margin-top:8px;"></div>
+      </div>
+      <div class="form-group">
+        <label>Phụ lục / văn bản kèm theo (có thể thêm nhiều file cùng lúc)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline" id="dt-phuluc-upload-btn"><i class="fa-solid fa-paperclip"></i> Thêm phụ lục</button>
+          <input type="file" id="dt-phuluc-input" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf" multiple style="display:none;">
+        </div>
+        <p class="helper-text">Dùng cho các phụ lục, biểu mẫu, văn bản đính kèm khác đi cùng dự thảo (mỗi file giới hạn ~10MB, có thể chọn nhiều file cùng lúc).</p>
+        <div id="dt-phuluc-preview" style="margin-top:8px;display:flex;flex-direction:column;gap:6px;"></div>
       </div>
       <div class="form-group"><label>Hạn góp ý</label><input type="datetime-local" class="form-control" id="dt-han"></div>
       <div class="form-group"><label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="dt-khoa" style="width:auto;"> Khoá góp ý ngay (đại biểu chỉ xem, không sửa/gửi thêm được dù chưa hết hạn)</label></div>
