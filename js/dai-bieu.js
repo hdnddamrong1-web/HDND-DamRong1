@@ -24,11 +24,22 @@ function formatDateTime(ts) {
   return `${hh}:${mi} ${dd}/${mm}/${yyyy}`;
 }
 
-/* Mở file trực tiếp để ĐỌC trong trình duyệt (không bị tải xuống máy) bằng cách
-   nhúng qua Google Docs Viewer - áp dụng được cho PDF/Word/Excel, và cũng giúp
-   xem được ngay trên các trình duyệt trong app (Zalo, Messenger...) vốn hay tự
-   động tải file thay vì hiển thị trực tiếp. */
+/* Mở file trực tiếp để ĐỌC trong trình duyệt (không bị tải xuống máy):
+   - PDF: trình duyệt đã có sẵn trình xem PDF nội tại, mở thẳng URL file là xem được ngay.
+   - Word/Excel/PowerPoint (.doc, .docx, .xls, .xlsx, .ppt, .pptx): các định dạng này
+     trình duyệt KHÔNG tự hiển thị được (sẽ tự tải về máy) nên phải nhúng qua
+     Microsoft Office Viewer - đọc file Office đáng tin cậy hơn Google Docs Viewer.
+   - Các loại file khác: dùng Google Docs Viewer làm phương án dự phòng. */
 function buildViewerLink(fileUrl) {
+  if (!fileUrl) return '#';
+  const cleanUrl = fileUrl.split('?')[0];
+  const ext = (cleanUrl.split('.').pop() || '').toLowerCase();
+  if (ext === 'pdf') {
+    return fileUrl;
+  }
+  if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext)) {
+    return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+  }
   return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
 }
 
