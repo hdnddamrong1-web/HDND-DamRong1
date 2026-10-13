@@ -31,6 +31,7 @@ async function bootDashboard() {
   document.getElementById('form-dt').addEventListener('submit', submitDtForm);
   document.getElementById('form-banhanh').addEventListener('submit', submitBanHanhForm);
   initDtFileUpload();
+  initDtPhuLucUpload();
   initBhFileUpload();
   document.getElementById('btn-export-excel').addEventListener('click', exportYkienExcel);
   document.getElementById('btn-export-word').addEventListener('click', exportYkienWord);
@@ -903,11 +904,67 @@ function renderDtFilePreview(url) {
     : '';
 }
 
+let cachedDtPhuLuc = [];
+
+function renderDtPhuLucPreview() {
+  const preview = document.getElementById('dt-phuluc-preview');
+  if (!preview) return;
+  preview.innerHTML = cachedDtPhuLuc
+    .map(
+      (p, idx) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--cream-200);border-radius:8px;padding:6px 10px;">
+      <i class="fa-solid fa-paperclip" style="color:var(--red-700);"></i>
+      <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" style="flex:1;color:var(--red-700);font-weight:600;text-decoration:none;">${escapeHtml(p.ten)}</a>
+      <button type="button" onclick="removeDtPhuLuc(${idx})" style="background:#b3261e;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:700;">&times;</button>
+    </div>`
+    )
+    .join('');
+}
+
+function removeDtPhuLuc(idx) {
+  cachedDtPhuLuc.splice(idx, 1);
+  renderDtPhuLucPreview();
+}
+
+function initDtPhuLucUpload() {
+  const uploadBtn = document.getElementById('dt-phuluc-upload-btn');
+  const fileInput = document.getElementById('dt-phuluc-input');
+  if (!uploadBtn || !fileInput) return;
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', async () => {
+    const files = Array.from(fileInput.files || []);
+    if (files.length === 0) return;
+    const originalHtml = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File "${file.name}" quá lớn (giới hạn 10MB), đã bỏ qua.`);
+        continue;
+      }
+      uploadBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải ${file.name}...`;
+      try {
+        const url = await uploadToStorage(file, 'du-thao-phu-luc');
+        cachedDtPhuLuc.push({ ten: file.name, url });
+        renderDtPhuLucPreview();
+      } catch (e) {
+        console.error(e);
+        alert(`Có lỗi khi tải file "${file.name}" lên.`);
+      }
+    }
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = originalHtml;
+    fileInput.value = '';
+  });
+}
+
 function openDtModal(id) {
   document.getElementById('form-dt').reset();
   document.getElementById('modal-dt-title').innerHTML = id ? '<i class="fa-solid fa-file-lines"></i> Sửa văn bản dự thảo' : '<i class="fa-solid fa-file-lines"></i> Thêm văn bản dự thảo';
   document.getElementById('dt-id').value = id || '';
   renderDtFilePreview('');
+  cachedDtPhuLuc = [];
   if (id) {
     const d = cachedDrafts.find((x) => x.id === id);
     if (d) {
@@ -917,8 +974,10 @@ function openDtModal(id) {
       renderDtFilePreview(d.file_url || '');
       document.getElementById('dt-han').value = d.han_gop_y ? new Date(d.han_gop_y).toISOString().slice(0, 16) : '';
       document.getElementById('dt-khoa').checked = !!d.khoa_gop_y;
+      cachedDtPhuLuc = Array.isArray(d.phu_luc) ? [...d.phu_luc] : [];
     }
   }
+  renderDtPhuLucPreview();
   document.getElementById('modal-dt').classList.add('open');
 }
 
@@ -964,7 +1023,8 @@ async function submitDtForm(e) {
     mo_ta: document.getElementById('dt-mota').value.trim(),
     file_url: document.getElementById('dt-file').value.trim(),
     han_gop_y: hanVal ? new Date(hanVal).toISOString() : null,
-    khoa_gop_y: document.getElementById('dt-khoa').checked
+    khoa_gop_y: document.getElementById('dt-khoa').checked,
+    phu_luc: cachedDtPhuLuc
   };
   try {
     if (id) {
