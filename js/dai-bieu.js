@@ -80,9 +80,9 @@ function renderDraftList(list) {
   mount.innerHTML = list
     .map((d) => {
       const locked = isDraftLocked(d);
-      const statusHtml = locked
-        ? `<span class="status-pill" style="background:#fde3e3;color:#9c1c1c;"><i class="fa-solid fa-lock"></i> ${d.khoa_gop_y ? 'Đã khoá góp ý' : 'Đã hết hạn góp ý'}</span>`
-        : `<span class="status-pill status-done"><i class="fa-solid fa-lock-open"></i> Còn thời hạn góp ý</span>`;
+      // Theo yêu cầu: KHÔNG hiển thị nhãn trạng thái "Đã khoá góp ý" / "Còn thời hạn góp ý"
+      // trên thẻ văn bản nữa (dù quản trị viên có tích "Khoá góp ý ngay" hay không).
+      // Việc khoá/mở góp ý thực tế vẫn hoạt động bình thường (ẩn/hiện nút gửi ý kiến bên dưới).
       const hasYkien = !!(d.myYkien && d.myYkien.noi_dung);
       // Tính năng nhận ý kiến CHỈ dành cho văn bản còn ở dạng dự thảo:
       // - Văn bản đã được đăng bản chính thức (da_ban_hanh) thì ẩn hoàn toàn mục ý kiến.
@@ -94,11 +94,12 @@ function renderDraftList(list) {
       <div class="doc-card" style="flex-direction:column;">
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
           <h4 style="margin:0;"><i class="fa-solid fa-file-lines" style="color:var(--red-700);margin-right:6px;"></i>${escapeHtml(d.tieu_de)}</h4>
-          ${statusHtml}
         </div>
-        <div class="meta" style="margin-top:8px;">
-          ${d.han_gop_y ? `<span><i class="fa-solid fa-clock"></i> Hạn góp ý: ${formatDateTime(d.han_gop_y)}</span>` : '<span>Chưa đặt hạn góp ý</span>'}
-        </div>
+        ${
+          d.han_gop_y
+            ? `<div class="meta" style="margin-top:8px;"><span><i class="fa-solid fa-clock"></i> Hạn góp ý: ${formatDateTime(d.han_gop_y)}</span></div>`
+            : ''
+        }
         <p class="desc">${escapeHtml(d.mo_ta || '')}</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
           ${
