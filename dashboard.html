@@ -148,7 +148,7 @@
         </p>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Họ tên</th><th>Số CCCD (đăng nhập)</th><th>Số điện thoại</th><th>Đã đổi mật khẩu</th><th>Hành động</th></tr></thead>
+            <thead><tr><th>Họ tên</th><th>Số CCCD (đăng nhập)</th><th>Số điện thoại</th><th>Đã đổi mật khẩu</th><th style="min-width:90px;">Hành động</th></tr></thead>
             <tbody id="db-account-table-body"></tbody>
           </table>
         </div>
@@ -307,6 +307,28 @@
         đại biểu tự đặt lại mật khẩu mới trước khi được dùng tiếp.
       </p>
       <button type="submit" class="btn-submit" id="db-account-submit-btn"><i class="fa-solid fa-floppy-disk"></i> Cấp tài khoản</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: Cấp lại mật khẩu cho Đại biểu (khi quên mật khẩu) -->
+<div class="modal-overlay" id="modal-reset-password">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-reset-password-close">&times;</button>
+    <h3><i class="fa-solid fa-key"></i> Cấp lại mật khẩu Đại biểu</h3>
+    <div class="alert alert-error" id="reset-password-error"></div>
+    <p class="helper-text" style="margin-bottom:14px;" id="reset-password-target-info"></p>
+    <form id="form-reset-password">
+      <input type="hidden" id="rp-email">
+      <div class="form-group">
+        <label>Mật khẩu mới *</label>
+        <input type="text" class="form-control" id="rp-newpass" required minlength="6" placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)">
+      </div>
+      <p class="helper-text" style="margin-bottom:14px;">
+        Sau khi cấp lại, đại biểu đăng nhập bằng <b>Số CCCD</b> (tên đăng nhập) và mật khẩu mới này.
+        Hệ thống sẽ <b>bắt buộc</b> đại biểu đổi sang mật khẩu khác ngay lần đăng nhập tới, giống như lúc cấp tài khoản lần đầu.
+      </p>
+      <button type="submit" class="btn-submit" id="rp-submit-btn"><i class="fa-solid fa-key"></i> Cấp lại mật khẩu</button>
     </form>
   </div>
 </div>
