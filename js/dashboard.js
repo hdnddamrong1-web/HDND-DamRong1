@@ -42,6 +42,7 @@ async function bootDashboard() {
     document.getElementById('modal-daibieu-account').classList.add('open');
   });
   document.getElementById('form-daibieu-account').addEventListener('submit', submitDaiBieuAccountForm);
+  document.getElementById('form-reset-password').addEventListener('submit', submitResetPasswordForm);
 
   bindModalClose('modal-kn', 'modal-kn-close');
   bindModalClose('modal-vb', 'modal-vb-close');
@@ -51,6 +52,7 @@ async function bootDashboard() {
   bindModalClose('modal-ykien-list', 'modal-ykien-list-close');
   bindModalClose('modal-banhanh', 'modal-banhanh-close');
   bindModalClose('modal-daibieu-account', 'modal-daibieu-account-close');
+  bindModalClose('modal-reset-password', 'modal-reset-password-close');
 }
 
 /* ---------- Header thông tin admin ---------- */
@@ -761,7 +763,10 @@ function renderDbAccountTable() {
         <td><b>${escapeHtml(a.cccd)}</b></td>
         <td>${escapeHtml(a.so_dien_thoai)}</td>
         <td>${a.da_doi_mat_khau ? '<span class="status-pill status-done">Đã đổi</span>' : '<span class="status-pill status-received">Chưa đổi (đang dùng mật khẩu mặc định)</span>'}</td>
-        <td><button class="icon-btn" onclick="deleteRecord('dai_bieu_accounts','${a.id}', loadDbAccountTable)" title="Xoá khỏi danh sách theo dõi (KHÔNG xoá tài khoản đăng nhập trên Supabase Auth)"><i class="fa-solid fa-trash"></i></button></td>
+        <td>
+          <button class="icon-btn" onclick="openResetPasswordModal('${escapeHtml(a.email_noi_bo)}','${escapeHtml(a.ho_ten)}','${escapeHtml(a.cccd)}')" title="Cấp lại mật khẩu (khi đại biểu quên mật khẩu)"><i class="fa-solid fa-key"></i></button>
+          <button class="icon-btn" onclick="deleteRecord('dai_bieu_accounts','${a.id}', loadDbAccountTable)" title="Xoá khỏi danh sách theo dõi (KHÔNG xoá tài khoản đăng nhập trên Supabase Auth)"><i class="fa-solid fa-trash"></i></button>
+        </td>
       </tr>`
     )
     .join('');
@@ -820,6 +825,69 @@ async function submitDaiBieuAccountForm(e) {
   } catch (e) {
     console.error(e);
     errEl.textContent = e.message || 'Có lỗi khi cấp tài khoản. Vui lòng thử lại.';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+/* ---------- CẤP LẠI MẬT KHẨU ĐẠI BIỂU (khi quên mật khẩu) ----------
+   Gọi 1 Supabase Edge Function riêng (reset-dai-bieu-password) - hàm đó chạy
+   trên hạ tầng Supabase và dùng service_role key để đặt lại mật khẩu, KHÔNG
+   bao giờ đưa khoá đó ra trình duyệt. Trang này chỉ gửi access token hiện tại
+   của Admin/Cán bộ (để Edge Function tự xác thực quyền) + email/mật khẩu mới. */
+function openResetPasswordModal(email, hoTen, cccd) {
+  document.getElementById('reset-password-error').classList.remove('show');
+  document.getElementById('form-reset-password').reset();
+  document.getElementById('rp-email').value = email;
+  document.getElementById('reset-password-target-info').innerHTML =
+    `Cấp lại mật khẩu cho đại biểu <b>${escapeHtml(hoTen)}</b> (CCCD: <b>${escapeHtml(cccd)}</b>). ` +
+    `Đại biểu sẽ đăng nhập bằng mật khẩu mới ngay bên dưới.`;
+  document.getElementById('modal-reset-password').classList.add('open');
+}
+
+async function submitResetPasswordForm(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('reset-password-error');
+  errEl.classList.remove('show');
+  const email = document.getElementById('rp-email').value;
+  const newPassword = document.getElementById('rp-newpass').value;
+  if (!newPassword || newPassword.length < 6) {
+    errEl.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('rp-submit-btn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang cấp lại mật khẩu...';
+
+  try {
+    const session = getSession();
+    if (!session) throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+
+    const { data, error } = await supabaseClient.functions.invoke('reset-dai-bieu-password', {
+      body: { email, newPassword }
+    });
+
+    // supabase-js chỉ set "error" khi lỗi mạng/HTTP; với lỗi nghiệp vụ (400/403/404...)
+    // Edge Function vẫn trả về JSON có "ok:false" nên phải kiểm tra thêm data.ok.
+    if (error) throw error;
+    if (!data || data.ok !== true) {
+      throw new Error((data && data.message) || 'Có lỗi khi cấp lại mật khẩu.');
+    }
+
+    document.getElementById('modal-reset-password').classList.remove('open');
+    alert(`Đã cấp lại mật khẩu mới cho đại biểu.\nMật khẩu mới: ${newPassword}\n\nVui lòng thông báo lại cho đại biểu. Hệ thống sẽ yêu cầu đổi mật khẩu khác ngay lần đăng nhập tới.`);
+    loadDbAccountTable();
+  } catch (e) {
+    console.error(e);
+    errEl.textContent =
+      e.message === 'Failed to send a request to the Edge Function'
+        ? 'Chưa triển khai Edge Function "reset-dai-bieu-password" trên Supabase, hoặc có lỗi kết nối. Vui lòng liên hệ kỹ thuật.'
+        : e.message || 'Có lỗi khi cấp lại mật khẩu. Vui lòng thử lại.';
     errEl.classList.add('show');
   } finally {
     btn.disabled = false;
