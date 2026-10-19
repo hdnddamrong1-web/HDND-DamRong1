@@ -764,12 +764,25 @@ function renderDbAccountTable() {
         <td>${escapeHtml(a.so_dien_thoai)}</td>
         <td>${a.da_doi_mat_khau ? '<span class="status-pill status-done">Đã đổi</span>' : '<span class="status-pill status-received">Chưa đổi (đang dùng mật khẩu mặc định)</span>'}</td>
         <td>
-          <button class="icon-btn" onclick="openResetPasswordModal('${escapeHtml(a.email_noi_bo)}','${escapeHtml(a.ho_ten)}','${escapeHtml(a.cccd)}')" title="Cấp lại mật khẩu (khi đại biểu quên mật khẩu)"><i class="fa-solid fa-key"></i></button>
+          <button class="icon-btn" onclick="openResetPasswordModalById('${a.id}')" title="Cấp lại mật khẩu (khi đại biểu quên mật khẩu)"><i class="fa-solid fa-key"></i></button>
           <button class="icon-btn" onclick="deleteRecord('dai_bieu_accounts','${a.id}', loadDbAccountTable)" title="Xoá khỏi danh sách theo dõi (KHÔNG xoá tài khoản đăng nhập trên Supabase Auth)"><i class="fa-solid fa-trash"></i></button>
         </td>
       </tr>`
     )
     .join('');
+}
+
+// Dùng id (UUID - luôn an toàn, không chứa ký tự đặc biệt) để tra lại thông tin
+// thay vì nhúng thẳng họ tên/CCCD vào chuỗi onclick. Lý do: một số họ tên đại biểu
+// là người dân tộc thiểu số có dấu nháy đơn trong tên (vd: K' Biển, K' Lương,
+// Kon Sơ K' Nò...). Nếu nhúng thẳng tên vào onclick="...('...')" thì dấu nháy đơn
+// đó sẽ làm "gãy" chuỗi JavaScript ngay trong thuộc tính onclick (vì trình duyệt
+// giải mã HTML entity &#39; thành ' TRƯỚC khi chạy JS), khiến nút bấm bị lỗi im
+// lặng, không mở được modal cấp lại mật khẩu - đây chính là lỗi đã gặp phải.
+function openResetPasswordModalById(id) {
+  const a = cachedDbAccounts.find((x) => x.id === id);
+  if (!a) return;
+  openResetPasswordModal(a.email_noi_bo, a.ho_ten, a.cccd);
 }
 
 async function submitDaiBieuAccountForm(e) {
